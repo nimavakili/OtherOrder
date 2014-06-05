@@ -28,11 +28,11 @@ import android.widget.Toast;
 
 public class GPSService extends Service implements LocationListener {
 
-	private String TAG = "GPSService";
+	private final String TAG = "GPSService";
 	private final IBinder mBinder = new LocationServiceBinder();
 	private NotificationManager mNotificationManager;
 	private NotificationCompat.Builder mBuilder;
-	public LocationManager locationManager;
+	private LocationManager locationManager;
 	private boolean GPSDisabled = false;
 	private boolean isTracking = false;
 	private boolean gotLock = false;
@@ -44,8 +44,7 @@ public class GPSService extends Service implements LocationListener {
 	//private TimerTask gpsLockCheck;
 	//private BroadcastManager broadcaster;
 	private long lastLocationMillis;
-	@SuppressWarnings("unused")
-	private float scale;
+	//private float scale;
 	//private int curMapI = -1;
 	//private int curMapJ = -1;
 	//private String lastSession = "NoSession";
@@ -62,22 +61,24 @@ public class GPSService extends Service implements LocationListener {
 	//public static final double heightLat = 0.159391d;
 	//private int linesCt = 0;
 	//private MediaPlayer mPlayer;
-	private Timer timer;
-	final static public String messageAction = "com.minimv.soundwalker.GPSService.Broadcast";
-	final static public String messageLock = "com.minimv.soundwalker.GPSService.Lock";
-	final static public String messageLoc = "com.minimv.soundwalker.GPSService.Location";
+	private final Timer timer = new Timer();
+	private final LockCheck lockCheck = new LockCheck();
+	public final static String messageAction = "com.minimv.soundwalker.GPSService.Broadcast";
+	public final static String messageLock = "com.minimv.soundwalker.GPSService.Lock";
+	public final static String messageLoc = "com.minimv.soundwalker.GPSService.Location";
 	//final static public String messageAcc = "com.minimv.soundwalker.GPSService.Acc";
 	//final static public String messageLat = "com.minimv.soundwalker.GPSService.Lat";
 	//final static public String messageLon = "com.minimv.soundwalker.GPSService.Lon";
-	final static public String messageAct = "com.minimv.soundwalker.GPSService.Act";
-	final static public String messageAll = "com.minimv.soundwalker.GPSService.All";
+	public final static String messageAct = "com.minimv.soundwalker.GPSService.Act";
+	public final static String messageAll = "com.minimv.soundwalker.GPSService.All";
     private AudioManager audioManager;
     private AudioManager.OnAudioFocusChangeListener onAudioFocusChange;
-    public static int nodeCount = 0;
-    public static NodeManager[] node;
+    public int nodeCount = 0;
+    public NodeManager[] node;
     private boolean hasAudioFocus = false;
     public static File sdFolder;
     public boolean noKill = false;
+    private double preLat = 0, preLon = 0, preAcc = -1;
     
 	@Override
 	public void onCreate() {
@@ -88,15 +89,14 @@ public class GPSService extends Service implements LocationListener {
 		
 		locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
 		locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 0, this);
-		timer = new Timer();
-		LockCheck lockCheck = new LockCheck();
+		
 		lastLocationMillis = System.currentTimeMillis();
 		timer.schedule(lockCheck, 5000, 5000);
 
 		Intent intent = new Intent(this, MainActivity.class);
 	    PendingIntent pIntent = PendingIntent.getActivity(this, 0, intent, Notification.FLAG_ONGOING_EVENT);
 	    mBuilder = new NotificationCompat.Builder(this)
-		        .setSmallIcon(R.drawable.ic_notif_w)
+		        .setSmallIcon(R.drawable.ic_notif)
 		        .setContentTitle(getResources().getString(R.string.is_tracking))
 		        .setContentText(getResources().getString(R.string.searching))
 	    		.setContentIntent(pIntent)
@@ -104,7 +104,7 @@ public class GPSService extends Service implements LocationListener {
 	    		.setTicker(getResources().getString(R.string.is_tracking));
 	    mNotificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
 
-		scale = getResources().getDisplayMetrics().widthPixels/320.0f;
+		//scale = getResources().getDisplayMetrics().widthPixels/320.0f;
 
 		//handler = new Handler();
 
@@ -337,7 +337,7 @@ public class GPSService extends Service implements LocationListener {
 			Toast.makeText(getApplicationContext(), getResources().getString(R.string.no_mp3), Toast.LENGTH_LONG).show();
 		}
 		else if (error > 0) {
-			Toast.makeText(getApplicationContext(), getResources().getString(R.string.invalid_format), Toast.LENGTH_LONG).show();
+			//Toast.makeText(getApplicationContext(), getResources().getString(R.string.invalid_format), Toast.LENGTH_LONG).show();
 		}
 	}
 	
@@ -362,9 +362,28 @@ public class GPSService extends Service implements LocationListener {
 		
 		//String stamp = date.format(new Date());
 		//String comm = ",";
+		double acc = location.getAccuracy();
+		double weight = 1/Math.max(acc, 1);
+		double preWeight = 1/Math.max(preAcc, 1);
+		if (preAcc == -1);
+			preWeight = 0;
+		
 		double lat = location.getLatitude();
 		double lon = location.getLongitude();
-		double acc = location.getAccuracy();
+		
+		// TODO
+		//lat += 42.295670 - 50.976125;
+		//lon += -71.112375 - 11.339915;
+
+		lat = (lat*weight + preLat*preWeight)/(weight + preWeight);
+		lon = (lon*weight + preLon*preWeight)/(weight + preWeight);
+		
+		preAcc = acc;
+		preLat = lat;
+		preLon = lon;
+		//double acc = location.getAccuracy();
+		//double lat = (location.getLatitude()*acc + preLat*preAcc)/(acc + preAcc);
+		//double lon = location.getLongitude();
 		//String line = lat + comm	+ lon + comm + stamp;
 		//sendMessage(messageAcc, location.getAccuracy());
 		//sendDouble(messageAcc, location.getSpeed());

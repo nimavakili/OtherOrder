@@ -1107,14 +1107,13 @@ containing a value of this type.
         public static final int empty=0x7f020089;
         public static final int ic_launcher=0x7f02008a;
         public static final int ic_notif=0x7f02008b;
-        public static final int ic_notif_w=0x7f02008c;
-        public static final int ic_plusone_medium_off_client=0x7f02008d;
-        public static final int ic_plusone_small_off_client=0x7f02008e;
-        public static final int ic_plusone_standard_off_client=0x7f02008f;
-        public static final int ic_plusone_tall_off_client=0x7f020090;
-        public static final int location_marker=0x7f020091;
-        public static final int main_bg=0x7f020092;
-        public static final int map_marker=0x7f020093;
+        public static final int ic_plusone_medium_off_client=0x7f02008c;
+        public static final int ic_plusone_small_off_client=0x7f02008d;
+        public static final int ic_plusone_standard_off_client=0x7f02008e;
+        public static final int ic_plusone_tall_off_client=0x7f02008f;
+        public static final int location_marker=0x7f020090;
+        public static final int main_bg=0x7f020091;
+        public static final int map_marker=0x7f020092;
     }
     public static final class id {
         public static final int SCROLLER_ID1=0x7f040048;
@@ -1169,41 +1168,42 @@ containing a value of this type.
         public static final int all_text=0x7f040041;
         public static final int app_name=0x7f040039;
         public static final int backButton=0x7f04004c;
-        public static final int center_title=0x7f040052;
+        public static final int center_title=0x7f040053;
         public static final int container=0x7f04004e;
-        public static final int demo_collection_button=0x7f040059;
-        public static final int demo_external_activity=0x7f04005a;
+        public static final int demo_collection_button=0x7f04005a;
+        public static final int demo_external_activity=0x7f04005b;
         public static final int disableHome=0x7f040009;
         public static final int edit_query=0x7f04002a;
-        public static final int gpsContainer=0x7f040055;
+        public static final int gpsContainer=0x7f040056;
         public static final int homeAsUp=0x7f040006;
         public static final int hybrid=0x7f040013;
-        public static final int latitude=0x7f040054;
+        public static final int latitude=0x7f040055;
         public static final int lattitude=0x7f04003c;
         public static final int lattitude_text=0x7f04003b;
         public static final int leftCol=0x7f040050;
         public static final int listMode=0x7f040002;
         public static final int longitude=0x7f04003e;
         public static final int longitude_text=0x7f04003d;
-        public static final int main_bg=0x7f040051;
-        public static final int map=0x7f040057;
-        public static final int mapD=0x7f040058;
-        public static final int menu_debug=0x7f04005b;
-        public static final int menu_reset=0x7f04005c;
-        public static final int menu_version=0x7f04005d;
+        public static final int main=0x7f040051;
+        public static final int main_bg=0x7f040052;
+        public static final int map=0x7f040058;
+        public static final int mapD=0x7f040059;
+        public static final int menu_debug=0x7f04005c;
+        public static final int menu_reset=0x7f04005d;
+        public static final int menu_version=0x7f04005e;
         public static final int none=0x7f040010;
         public static final int normal=0x7f040001;
         public static final int pager=0x7f040036;
         public static final int pager_title_strip=0x7f040037;
         public static final int parent=0x7f040038;
-        public static final int regionContainer=0x7f040056;
+        public static final int regionContainer=0x7f040057;
         public static final int satellite=0x7f040011;
         public static final int searching=0x7f04003a;
         public static final int showCustom=0x7f040008;
         public static final int showHome=0x7f040005;
         public static final int showTitle=0x7f040007;
         public static final int spinner=0x7f04004d;
-        public static final int stats=0x7f040053;
+        public static final int stats=0x7f040054;
         public static final int tabMode=0x7f040003;
         public static final int terrain=0x7f040012;
         public static final int trackingButton=0x7f040046;
@@ -1258,7 +1258,7 @@ containing a value of this type.
         public static final int activity_menu=0x7f0b0000;
     }
     public static final class string {
-        public static final int about=0x7f09005c;
+        public static final int about=0x7f09005d;
         /**  Content description for the action bar "home" affordance. [CHAR LIMIT=NONE] 
          */
         public static final int abs__action_bar_home_description=0x7f090000;
@@ -1299,7 +1299,7 @@ containing a value of this type.
          */
         public static final int abs__shareactionprovider_share_with_application=0x7f090007;
         public static final int app_name=0x7f090028;
-        public static final int audio=0x7f090050;
+        public static final int audio=0x7f090051;
         /**   Title for notification shown when GooglePlayServices needs to be
         enabled for a application to work. [CHAR LIMIT=70] 
          */
@@ -1395,29 +1395,30 @@ containing a value of this type.
         /**  Long form sign-in button text [CHAR LIMIT=30] 
          */
         public static final int common_signin_button_text_long=0x7f090020;
-        public static final int delete_notif=0x7f09004b;
-        public static final int demo_collection=0x7f090060;
-        public static final int demo_external_activity=0x7f09005f;
-        public static final int detail_notif=0x7f09004c;
-        public static final int do_nothing=0x7f09003f;
-        public static final int dummy_section_text=0x7f09005e;
-        public static final int enable_gps=0x7f09003e;
+        public static final int delete_notif=0x7f09004c;
+        public static final int demo_collection=0x7f090061;
+        public static final int demo_external_activity=0x7f090060;
+        public static final int detail_notif=0x7f09004d;
+        public static final int do_nothing=0x7f090040;
+        public static final int dummy_section_text=0x7f09005f;
+        public static final int enable_gps=0x7f09003f;
         /**  color name="semi_white">#7FFFFFFF</color 
          */
         public static final int go_button=0x7f090033;
         public static final int go_text=0x7f090038;
         public static final int gps_disabled=0x7f09003c;
+        public static final int gps_disabled_prompt=0x7f09003e;
         /**  string name="test">http://minim-v.com/grimpant/A000002A64C317/40.50689578,-74.47057746,20130615163348.mp3</string 
  string name="nomap_text">No Map Available  No Map Available  No Map Available\n\nNo Map Available  No Map Available  No Map Available\n\nNo Map Available  No Map Available  No Map Available\n\nNo Map Available  No Map Available  No Map Available\n\nNo Map Available  No Map Available  No Map Available\n\nNo Map Available  No Map Available  No Map Available\n\nNo Map Available  No Map Available  No Map Available\n\nNo Map Available  No Map Available  No Map Available</string 
          */
-        public static final int gps_disabled_prompt=0x7f09003d;
-        public static final int help=0x7f09005d;
-        public static final int invalid_format=0x7f09005b;
-        public static final int is_tracking=0x7f090054;
+        public static final int gps_disabled_prompt_kitkat=0x7f09003d;
+        public static final int help=0x7f09005e;
+        public static final int invalid_format=0x7f09005c;
+        public static final int is_tracking=0x7f090055;
         /**  Location client code resources (prefix with location_client) 
          */
         public static final int location_client_powered_by_google=0x7f090027;
-        public static final int lock=0x7f090056;
+        public static final int lock=0x7f090057;
         public static final int menu_about=0x7f09002a;
         /**  string name="hello_world">Hello World!</string 
          */
@@ -1425,14 +1426,14 @@ containing a value of this type.
         public static final int menu_delete=0x7f09002c;
         public static final int menu_help=0x7f09002d;
         public static final int menu_reset=0x7f09002b;
-        public static final int need_lock=0x7f090048;
-        public static final int no=0x7f090045;
-        public static final int no_folder=0x7f090059;
-        public static final int no_internet=0x7f090057;
-        public static final int no_lock=0x7f090055;
-        public static final int no_mp3=0x7f09005a;
-        public static final int no_sd=0x7f090058;
-        public static final int ok=0x7f090043;
+        public static final int need_lock=0x7f090049;
+        public static final int no=0x7f090046;
+        public static final int no_folder=0x7f09005a;
+        public static final int no_internet=0x7f090058;
+        public static final int no_lock=0x7f090056;
+        public static final int no_mp3=0x7f09005b;
+        public static final int no_sd=0x7f090059;
+        public static final int ok=0x7f090044;
         public static final int outide_map=0x7f09003a;
         public static final int play_button=0x7f090036;
         public static final int save_button=0x7f090034;
@@ -1442,22 +1443,22 @@ containing a value of this type.
         public static final int stop_button=0x7f090037;
         public static final int stop_recording=0x7f09002e;
         public static final int stop_tracking=0x7f090031;
-        public static final int track=0x7f09004f;
-        public static final int unsent_audio=0x7f090042;
-        public static final int unsent_both=0x7f090040;
-        public static final int unsent_notif=0x7f09004a;
-        public static final int unsent_track=0x7f090041;
+        public static final int track=0x7f090050;
+        public static final int unsent_audio=0x7f090043;
+        public static final int unsent_both=0x7f090041;
+        public static final int unsent_notif=0x7f09004b;
+        public static final int unsent_track=0x7f090042;
         public static final int upload_button=0x7f090032;
-        public static final int upload_notif=0x7f09004d;
-        public static final int upload_recording=0x7f090046;
-        public static final int upload_track=0x7f090047;
-        public static final int uploading=0x7f09004e;
-        public static final int uploading_error=0x7f090052;
-        public static final int uploading_finished=0x7f090051;
-        public static final int uploading_unsent=0x7f090053;
+        public static final int upload_notif=0x7f09004e;
+        public static final int upload_recording=0x7f090047;
+        public static final int upload_track=0x7f090048;
+        public static final int uploading=0x7f09004f;
+        public static final int uploading_error=0x7f090053;
+        public static final int uploading_finished=0x7f090052;
+        public static final int uploading_unsent=0x7f090054;
         public static final int version=0x7f090039;
-        public static final int wait_lock=0x7f090049;
-        public static final int yes=0x7f090044;
+        public static final int wait_lock=0x7f09004a;
+        public static final int yes=0x7f090045;
     }
     public static final class style {
         /** 

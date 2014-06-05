@@ -4,9 +4,6 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 
-import com.google.android.gms.maps.CameraUpdateFactory;
-import com.google.android.gms.maps.GoogleMap;
-import com.google.android.gms.maps.Projection;
 import com.actionbarsherlock.app.ActionBar;
 import com.actionbarsherlock.app.ActionBar.Tab;
 import com.actionbarsherlock.app.SherlockFragmentActivity;
@@ -38,6 +35,7 @@ import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.ViewTreeObserver;
 import android.view.Window;
 import android.widget.FrameLayout;
 import android.widget.HorizontalScrollView;
@@ -46,7 +44,12 @@ import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.ToggleButton;
 
+//import com.google.android.gms.maps.CameraUpdate;
+import com.google.android.gms.maps.CameraUpdateFactory;
+import com.google.android.gms.maps.GoogleMap;
+//import com.google.android.gms.maps.MapFragment;
 import com.google.android.gms.maps.SupportMapFragment;
+import com.google.android.gms.maps.Projection;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.CameraPosition;
 import com.google.android.gms.maps.model.Circle;
@@ -58,110 +61,103 @@ import com.google.android.gms.maps.model.LatLngBounds;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.minimv.soundwalker.R;
+import com.bugsense.trace.BugSenseHandler;
 
-public class MainActivity extends SherlockFragmentActivity implements ActionBar.TabListener {
+public class MainActivity extends SherlockFragmentActivity
+		implements ActionBar.TabListener {
 
     private AppSectionsPagerAdapter mAppSectionsPagerAdapter;
     private ViewPager mViewPager;
+    private static MainSectionFragment mainFragment;
     private static MapSectionFragment mapFragment;
-    //private static Bundle previousInstance;
+    //private Bundle previousInstance;
+    private boolean wasChangingConfigurations = false;
+    //public static int MAIN_FRAGMENT_INDEX = 0;
+    //public static int MAP_FRAGMENT_INDEX = 1;
+    //public static int ABOUT_FRAGMENT_INDEX = 2;
 
     private Context mContext;
-	private static String TAG = "GPSActiviy";
-	private GPSService gpsService;
-	private ServiceConnection gpsServiceConnection = new ServiceConnection() {
+	private final String TAG = "MainActiviy";
+	private static GPSService gpsService;
+	private final ServiceConnection gpsServiceConnection = new ServiceConnection() {
 		@Override
 		public void onServiceConnected(ComponentName name, IBinder service) {
 			gpsService = ((GPSService.LocationServiceBinder) service).getService();
-			Log.v(TAG, "GPS service is tracking: " + gpsService.isTracking());
-			if (gpsService.isTracking()) {
-				tb.setChecked(true);
+			//Log.v(TAG, "GPS service is tracking: " + gpsService.isTracking());
+			if (mainFragment != null) {
+				if (gpsService.isTracking()) {
+					//Log.v("TB", "wantsToSetChecked");
+					mainFragment.tb.post(new Runnable() {
+						@Override
+						public void run() {
+							mainFragment.tb.setChecked(true);
+							//Log.v("TB", "setChecked");
+						}
+					});
+				}
+				mainFragment.searching.post(new Runnable() {
+					@Override
+					public void run() {
+		            	mainFragment.accuracy.setText("---");
+		            	mainFragment.lattitude.setText("---");
+		            	mainFragment.longitude.setText("---");
+		            	mainFragment.active.setText("0");
+						if (gpsService.GPSDisabled()) {
+							mainFragment.searching.setText(getStr(R.string.gps_disabled));
+						}
+						else if (gpsService.gotLock()) {
+							mainFragment.searching.setText(getStr(R.string.lock));
+						}
+						else {
+							mainFragment.searching.setText(getStr(R.string.searching));
+						}
+					}
+				});
 			}
-			handler.post(GPSDialog);
+			/*if (mapFragment != null) {
+				mapFragment.rootView.post(new Runnable() {
+					public void run() {
+						//mapFragment.toggleDebug(mapFragment.debug);
+						mapFragment.addNodes();
+					}
+				});
+				mapFragment.rootView.postDelayed(new Runnable() {
+					public void run() {
+						//mapFragment.toggleDebug(mapFragment.debug);
+						mapFragment.addNodes();
+					}
+				}, 2000);
+			}*/
+			if (!wasChangingConfigurations) {
+				handler.post(GPSDialog);
+			}
 		}
 		@Override
 		public void onServiceDisconnected(ComponentName name) {
 			gpsService = null;
 		}
 	};
-	float scale;
-	int width;
-	//public static Button bb; //, gb, ub, sb, stb;
-	//public static ToggleButton tb, rb, pb;
-	public static ToggleButton tb;
-	//public static TextView tt, rt, gt, searching;
-	public static TextView searching, accuracy, lattitude, longitude, active, all;
-	public static RelativeLayout mainBg, stats;//about, parent, mapPins, help;
-	private Runnable GPSDialog;
-	private Handler handler;
-	public static AlertDialog GPSAlert;
-	private Intent gpsIntent;
-	private BroadcastReceiver receiver;
-
-    public void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
-        mAppSectionsPagerAdapter = new AppSectionsPagerAdapter(getSupportFragmentManager());
-        final ActionBar actionBar = getSupportActionBar();
-        //pre-ICS
-        if (actionBar instanceof ActionBarImpl) {
-            enableEmbeddedTabs(actionBar);
-        //ICS and forward
-        }
-        else if (actionBar instanceof ActionBarWrapper) {
-            try {
-                Field actionBarField = actionBar.getClass().getDeclaredField("mActionBar");
-                actionBarField.setAccessible(true);
-                enableEmbeddedTabs(actionBarField.get(actionBar));
-            } catch (Exception e) {
-                Log.e(TAG, "Error enabling embedded tabs", e);
-            }
-        }
-        actionBar.setHomeButtonEnabled(false);
-        actionBar.setDisplayShowTitleEnabled(false);
-        //actionBar.setIcon(Color.TRANSPARENT);
-        actionBar.setDisplayHomeAsUpEnabled(false);
-        actionBar.setDisplayShowHomeEnabled(false);
-        mViewPager = (ViewPager) findViewById(R.id.pager);
-        mViewPager.setAdapter(mAppSectionsPagerAdapter);
-        mViewPager.setOnPageChangeListener(new ViewPager.SimpleOnPageChangeListener() {
-            @Override
-            public void onPageSelected(int position) {
-                actionBar.setSelectedNavigationItem(position);
-            }
-        });
-        mViewPager.setOffscreenPageLimit(2);
-        
-        for (int i = 0; i < mAppSectionsPagerAdapter.getCount(); i++) {
-            actionBar.addTab(
-                    actionBar.newTab()
-                            .setText(mAppSectionsPagerAdapter.getPageTitle(i))
-                            .setTabListener(this));
-        }
-        
-        actionBar.setNavigationMode(ActionBar.NAVIGATION_MODE_TABS);
-        //mViewPager.setCurrentItem(2);
-
-		//scale = getResources().getDisplayMetrics().widthPixels/320.0f;
-		//width = getResources().getDisplayMetrics().widthPixels;
-		gpsIntent = new Intent(getApplicationContext(), GPSService.class);
-		mContext = this;
-		handler = new Handler();
-		GPSDialog = new Runnable() {
-			@Override
-			public void run() {
-				setTabsWidth();
-				if (gpsService != null) {
-					if (gpsService.GPSDisabled()) {
-						//searching.setVisibility(View.INVISIBLE);
-						searching.setText(getStr(R.string.gps_disabled));
-		            	if (GPSAlert != null) {
-		            		if (GPSAlert.isShowing()) {
-		            			return;
-		            		}
-		            	}
+	private final Runnable GPSDialog = new Runnable() {
+		@Override
+		public void run() {
+			if (gpsService != null) {
+				if (gpsService.GPSDisabled()) {
+	            	if (GPSAlert != null) {
+	            		if (GPSAlert.isShowing()) {
+	            			return;
+	            		}
+	            	}
+	            	try {
 						AlertDialog.Builder builder = new AlertDialog.Builder(mContext);
-			            builder.setMessage(getStr(R.string.gps_disabled_prompt));
+			            int currentApiVersion = android.os.Build.VERSION.SDK_INT;
+			            String msg = "";
+			            if (currentApiVersion >= 19) {
+			            	msg = getStr(R.string.gps_disabled_prompt_kitkat);
+			            }
+			            else {
+			            	msg = getStr(R.string.gps_disabled_prompt);
+			            }
+			            builder.setMessage(msg);
 			            builder.setCancelable(true);
 			            builder.setPositiveButton(getStr(R.string.enable_gps), new DialogInterface.OnClickListener() {
 			                 public void onClick(DialogInterface dialog, int id) {
@@ -177,92 +173,187 @@ public class MainActivity extends SherlockFragmentActivity implements ActionBar.
 			             });
 			             GPSAlert = builder.create();
 			             GPSAlert.show();
-		            }
-					else {
-						if (!gpsService.gotLock())
-							//searching.setVisibility(View.VISIBLE);
-							searching.setText(getStr(R.string.searching));
-					}
+	            	}
+	            	catch (NullPointerException e) {
+	            		//e.printStackTrace();
+	            	}
+	            }
+				else {
+					if (!gpsService.gotLock())
+						//searching.setVisibility(View.VISIBLE);
+						if (mainFragment != null) {
+							mainFragment.searching.setText(getStr(R.string.searching));
+						}
 				}
 			}
-		};
-	    receiver = new BroadcastReceiver() {
-	        @Override
-	        public void onReceive(Context context, Intent intent) {
-	            String messageLock = intent.getStringExtra(GPSService.messageLock);
-	            double[] messageLoc = intent.getDoubleArrayExtra(GPSService.messageLoc);
-	            int messageAct = intent.getIntExtra(GPSService.messageAct, -1000);
-	            int messageAll = intent.getIntExtra(GPSService.messageAll, -1000);
-	            if (messageLock != null) {
-		            //Log.v("Receive", messageLock);
+		}
+	};
+	/*private Runnable asyncInit = new Runnable() {
+		@Override
+		public void run() {
+			// TODO
+			setTabsWidth();
+			if (gpsService != null) {
+				if (gpsService.isTracking() && mainFragment != null) {
+					mainFragment.tb.setChecked(true);
+				}
+			}
+			if (mainFragment != null) {
+				mainFragment.searching.setText(getStr(R.string.gps_disabled));
+			}
+		}
+	};*/
+	private final Handler handler = new Handler();
+	private AlertDialog GPSAlert;
+	private Intent gpsIntent;
+	private final BroadcastReceiver receiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            String messageLock = intent.getStringExtra(GPSService.messageLock);
+            double[] messageLoc = intent.getDoubleArrayExtra(GPSService.messageLoc);
+            int messageAct = intent.getIntExtra(GPSService.messageAct, -1000);
+            int messageAll = intent.getIntExtra(GPSService.messageAll, -1000);
+            if (messageLock != null) {
+	            //Log.v("Receive", messageLock);
+				if (mainFragment != null) {
 		            if (messageLock.equals("No")) {
-		            	mapFragment.noLock();
-		            	//mapFragment.updateLocation(42.296335, -71.121215, 0);
+		            	if (mapFragment != null)
+		            		mapFragment.noLock();
 		            	//searching.setVisibility(View.VISIBLE);
 		            	if (gpsService.GPSDisabled()) {
-		            		searching.setText(getStr(R.string.gps_disabled));
+		            		mainFragment.searching.setText(getStr(R.string.gps_disabled));
 		            	}
 		            	else {
-		            		searching.setText(getStr(R.string.searching));
+		            		mainFragment.searching.setText(getStr(R.string.searching));
 		            	}
-		            	accuracy.setText("---");
-		            	lattitude.setText("---");
-		            	longitude.setText("---");
-		            	active.setText("0");
+		            	mainFragment.accuracy.setText("---");
+		            	mainFragment.lattitude.setText("---");
+		            	mainFragment.longitude.setText("---");
+		            	mainFragment.active.setText("0");
 		            	//all.setText("---");
 		            }
 		            else if (messageLock.equals("Yes")) {
 		            	//searching.setVisibility(View.INVISIBLE);
-		            	searching.setText(getStr(R.string.lock));
+		            	mainFragment.searching.setText(getStr(R.string.lock));
 		            }
-	            }
-	            if (messageLoc != null) {
-	            	String lat = String.valueOf(messageLoc[0]);
-	            	String lon = String.valueOf(messageLoc[1]);
-	            	String acc = String.valueOf(messageLoc[2]);
-		            //Log.v("Receive", acc);
-	            	lattitude.setText(lat);
-	            	longitude.setText(lon);
-	            	accuracy.setText(acc);
-	            	//mapFragment.updateLocation(42.296335, -71.121215, 0);
-	            	mapFragment.updateLocation(messageLoc[0], messageLoc[1], messageLoc[2]);
-	            }
-	            if (messageAct != -1000) {
-	            	String act = String.valueOf(messageAct);
-		            //Log.v("Receive", act);
-	            	active.setText(act);
-	        		if (mapFragment != null) {
-	        			if (mapFragment.debug) {
-	        				mapFragment.updateNodes();
-	        			}
-	        		}
-	            }
-	            if (messageAll != -1000) {
-	            	String allS = String.valueOf(messageAll);
-		            //Log.v("Receive", allS);
-	            	all.setText(allS);
-	            }
-	        }
-	    };
-	    
+				}
+            }
+            if (messageLoc != null) {
+            	String lat = String.valueOf(messageLoc[0]);
+            	String lon = String.valueOf(messageLoc[1]);
+            	String acc = String.valueOf(messageLoc[2]);
+	            //Log.v("Receive", acc);
+				if (mainFragment != null) {
+					mainFragment.lattitude.setText(lat.substring(0, Math.min(10, lat.length())));
+	            	mainFragment.longitude.setText(lon.substring(0, Math.min(10, lon.length())));
+	            	mainFragment.accuracy.setText(acc);
+				}
+            	//mapFragment.updateLocation(42.296335, -71.121215, 0);
+            	if (mapFragment != null)
+            		mapFragment.updateLocation(messageLoc[0], messageLoc[1], messageLoc[2]);
+            }
+            if (messageAct != -1000) {
+            	String act = String.valueOf(messageAct);
+	            //Log.v("Receive", act);
+				if (mainFragment != null) {
+					mainFragment.active.setText(act);
+				}
+        		if (mapFragment != null) {
+        			if (mapFragment.debug) {
+        				mapFragment.updateNodes();
+        			}
+        		}
+            }
+            if (messageAll != -1000) {
+            	String allS = String.valueOf(messageAll);
+	            //Log.v("Receive", allS);
+				if (mainFragment != null) {
+					mainFragment.all.setText(allS);
+				}
+            }
+        }
+    };
+
+    public void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+		mContext = this;
+		BugSenseHandler.initAndStartSession(this, "41c5041a");
+		setContentView(R.layout.activity_main);
+        mAppSectionsPagerAdapter = new AppSectionsPagerAdapter(getSupportFragmentManager());
+        final ActionBar actionBar = getSupportActionBar();
+        //TODO: pre-ICS
+        if (actionBar instanceof ActionBarImpl) {
+            enableEmbeddedTabs(actionBar);
+        //ICS and forward
+        }
+        else if (actionBar instanceof ActionBarWrapper) {
+            try {
+                Field actionBarField = actionBar.getClass().getDeclaredField("mActionBar");
+                actionBarField.setAccessible(true);
+                enableEmbeddedTabs(actionBarField.get(actionBar));
+            } catch (Exception e) {
+                Log.e(TAG, "Error enabling embedded tabs", e);
+    	        BugSenseHandler.sendException(e);
+            }
+        }
+        
+        actionBar.setHomeButtonEnabled(false);
+        actionBar.setDisplayShowTitleEnabled(false);
+        //actionBar.setIcon(Color.TRANSPARENT);
+        actionBar.setDisplayHomeAsUpEnabled(false);
+        actionBar.setDisplayShowHomeEnabled(false);
+
+        mViewPager = (ViewPager) findViewById(R.id.pager);
+        mViewPager.setAdapter(mAppSectionsPagerAdapter);
+        mViewPager.setOnPageChangeListener(new ViewPager.SimpleOnPageChangeListener() {
+            @Override
+            public void onPageSelected(int position) {
+                actionBar.setSelectedNavigationItem(position);
+            }
+        });
+        mViewPager.setOffscreenPageLimit(2);
+        for (int i = 0; i < mAppSectionsPagerAdapter.getCount(); i++) {
+            actionBar.addTab(
+                    actionBar.newTab()
+                            .setText(mAppSectionsPagerAdapter.getPageTitle(i))
+                            .setTabListener(this));
+        }
+        
+        //This has to be after adding tabs to get rid of auto change to list mode
+        actionBar.setNavigationMode(ActionBar.NAVIGATION_MODE_TABS);
+        //mViewPager.setCurrentItem(2);
+
+        gpsIntent = new Intent(getApplicationContext(), GPSService.class);
+		if (savedInstanceState != null) {
+			wasChangingConfigurations = savedInstanceState.getBoolean("wasChangingConfigurations", false);
+		}
 	    //previousInstance = savedInstanceState;
 	}
 	
 	@Override
-	protected void onResume() {
-		super.onResume();
-		//wasChangingConf = !previousInstance.getBoolean("wasChangingConfigurations", true);
-		//if (mapFragment != null) {
-		//	mapFragment.toggleDebug(mapFragment.debug);
+	protected void onStart() {
+		super.onStart();		
+		//wasChangingConfigurations = false;
+		//if (previousInstance != null) {
+			//wasChangingConfigurations = previousInstance.getBoolean("wasChangingConfigurations", false);
 		//}
+		//MapSectionFragment mapFragment = (MapSectionFragment) getSupportFragmentManager().findFragmentById(R.id.map);
+		//if (mapFragment != null) {
+		//	if (mapFragment.debug) {
+		//		MainSectionFragment mainFragment = (MainSectionFragment) getSupportFragmentManager().findFragmentById(R.id.main);
+		//		mainFragment.
+		//	}
+		//}
+		registerReceiver(receiver, new IntentFilter(GPSService.messageAction));
 		startService(gpsIntent);
 		bindService(gpsIntent, gpsServiceConnection, Context.BIND_AUTO_CREATE);
-		registerReceiver(receiver, new IntentFilter(GPSService.messageAction));
+		
+		setTabsWidth();
 	}
 
 	@Override
-	protected void onPause() {
-		super.onPause();
+	protected void onStop() {
+		super.onStop();
 		if (isChangingConfigurations() && gpsService != null) {
 			gpsService.noKill = true;
 		}
@@ -273,18 +364,29 @@ public class MainActivity extends SherlockFragmentActivity implements ActionBar.
 		}
 		unbindService(gpsServiceConnection);
     	unregisterReceiver(receiver);
+    	
+    	wasChangingConfigurations = false;
+    	//releaseResources();
 	}
 	
-	/*@Override
+	//private void releaseResources() {
+		//gpsService = null;
+		//mainFragment = null;
+		//mapFragment = null;
+		//previousInstance = null;
+	//}
+	
+	@Override
 	public void onSaveInstanceState(Bundle savedInstanceState) {
+	    super.onSaveInstanceState(savedInstanceState);
 		try {
+			//Log.v(TAG, "isChangingConfigurations: " + isChangingConfigurations());
 			savedInstanceState.putBoolean("wasChangingConfigurations", isChangingConfigurations());
 		}
 		catch (NullPointerException e) {
 			//e.printStackTrace();
 		}
-	    super.onSaveInstanceState(savedInstanceState);
-	}*/
+	}
     
 	@Override
 	public boolean onCreateOptionsMenu(Menu menu) {
@@ -292,14 +394,18 @@ public class MainActivity extends SherlockFragmentActivity implements ActionBar.
 		//if (previousInstance != null)
 		if (mapFragment != null) {
 			menu.getItem(0).setChecked(mapFragment.debug);
+			if (mainFragment != null) {
+				mainFragment.toggleDebug(mapFragment.debug);
+			}
 		}
 	    return true;
 	}
     
-    //@Override
-    //public void onDestroy() {
-    //	super.onDestroy();
-    //}
+    @Override
+    public void onDestroy() {
+    	super.onDestroy();
+    	BugSenseHandler.closeSession(this);
+    }
 
     public static class AppSectionsPagerAdapter extends FragmentPagerAdapter {
 
@@ -309,12 +415,25 @@ public class MainActivity extends SherlockFragmentActivity implements ActionBar.
 
         @Override
         public Fragment getItem(int i) {
+        	//Log.v(TAG, "AppSectionsPagerAdapter getItem");
             switch (i) {
                 case 0:
-                    return new MainSectionFragment();
+                	mainFragment = new MainSectionFragment();
+                    Bundle mainArgs = new Bundle();
+                    if (gpsService != null)
+                    	mainArgs.putBoolean("tb", gpsService.isTracking());
+                    else
+                    	mainArgs.putBoolean("tb", false);
+                    return mainFragment;
                 case 1:
                 	mapFragment = new MapSectionFragment();
-                	return mapFragment;
+                    //Bundle mapArgs = new Bundle();
+                    //if (gpsService != null)
+                    //	mapArgs.putBoolean("tb", gpsService.isTracking());
+                    //else
+                    //	mapArgs.putBoolean("tb", false);
+                    //mapF.setArguments(mapArgs);
+                    return mapFragment;
                 case 2:
                 	return new AboutFragment();
                 default:
@@ -344,19 +463,57 @@ public class MainActivity extends SherlockFragmentActivity implements ActionBar.
             	return "Section " + (i + 1);
             }
         }
+        
+        /*public void destroyItem(View container, int position, Object object) {
+            super.destroyItem(container, position, object);
+            mPageReferenceMap.remove(position);
+        }*/
+         /**
+         * After an orientation change, the fragments are saved in the adapter, and
+         * I don't want to double save them: I will retrieve them and put them in my
+         * list again here.
+         */
+        @Override
+        public Object instantiateItem(ViewGroup container, int i) {
+            switch (i) {
+            case 0:
+                mainFragment = (MainSectionFragment) super.instantiateItem(container, 0);
+                return mainFragment;
+            case 1:
+                mapFragment = (MapSectionFragment) super.instantiateItem(container, 1);
+                return mapFragment;
+            default:
+            	return super.instantiateItem(container, i);
+            }
+        }
     }
 
     public static class MainSectionFragment extends Fragment {
 
+    	//public static Button bb; //, gb, ub, sb, stb;
+    	//public static ToggleButton tb, rb, pb;
+    	public ToggleButton tb;
+    	//public static TextView tt, rt, gt, searching;
+    	public TextView searching, accuracy, lattitude, longitude, active, all;
+    	public RelativeLayout mainBg, stats;//about, parent, mapPins, help;
+    	
         @Override
         public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
             View rootView = inflater.inflate(R.layout.fragment_main_new, container, false);
+            //Bundle args = getArguments();
     		//gb = (Button) findViewById(R.id.goButton);
     		//bb = (Button) rootView.findViewById(R.id.backButton);
     		//sb = (Button) findViewById(R.id.saveButton);
     		//stb = (Button) findViewById(R.id.stopButton);
     		//pb = (ToggleButton) findViewById(R.id.playButton);
     		tb = (ToggleButton) rootView.findViewById(R.id.trackingButton);
+    		/*try {
+    			tb.setChecked(args.getBoolean("tb"));
+    		}
+    		catch (NullPointerException e) {
+    			e.printStackTrace();
+    		}*/
+			//Log.v("TB", "created");
     		//rb = (ToggleButton) findViewById(R.id.recordingButton);
     		//tt = (TextView) findViewById(R.id.trackingText);
     		//rt = (TextView) findViewById(R.id.recordingText);
@@ -380,28 +537,32 @@ public class MainActivity extends SherlockFragmentActivity implements ActionBar.
     		//center.setVisibility(View.INVISIBLE);
     		//mapOver.setVisibility(View.INVISIBLE);
     		//searching.setVisibility(View.INVISIBLE);
-    		try {
-	    		if (savedInstanceState.getBoolean("debug")) {
-	    			stats.setVisibility(View.VISIBLE);
-	    			mainBg.setVisibility(View.INVISIBLE);
-	    		}
-    		}
-    		catch (NullPointerException e) {
-    			//e.printStackTrace();
-    		}
+    		//toggleDebug(args.getBoolean("debug"));
             return rootView;
         }
+
+        public void toggleDebug(boolean debug) {
+    		if (debug) {
+    			stats.setVisibility(View.VISIBLE);
+    			mainBg.setVisibility(View.INVISIBLE);
+    		}
+    		else {
+    			stats.setVisibility(View.GONE);
+    			mainBg.setVisibility(View.VISIBLE);
+    		}
+        }
         
-    	@Override
+    	/*@Override
     	public void onSaveInstanceState(Bundle savedInstanceState) {
     		try {
+            	MapSectionFragment mapFragment = (MapSectionFragment) getSupportFragmentManager().findFragmentById(R.id.map);
     			savedInstanceState.putBoolean("debug", mapFragment.debug);
     		}
     		catch (NullPointerException e) {
     			//e.printStackTrace();
     		}
     	    super.onSaveInstanceState(savedInstanceState);
-    	}
+    	}*/
     }
 
     /**
@@ -431,7 +592,7 @@ public class MainActivity extends SherlockFragmentActivity implements ActionBar.
         }
     }
 
-    private void showAboutDialog() {
+    /*private void showAboutDialog() {
 		AlertDialog.Builder builder = new AlertDialog.Builder(mContext);
 		LayoutInflater inflater = getLayoutInflater();
 		View view = inflater.inflate(R.layout.fragment_about, null);
@@ -442,36 +603,49 @@ public class MainActivity extends SherlockFragmentActivity implements ActionBar.
 			}
         });
         builder.setCancelable(true);
-        /*String version = getStr(R.string.version);
+        String version = getStr(R.string.version);
         try {
 			version = mContext.getPackageManager().getPackageInfo(this.getPackageName(), 0).versionName;
 		} catch (NameNotFoundException e) {
 			e.printStackTrace();
-		}*/
+		}
         //builder.setTitle("About - v" + version);
         //builder.setCustomTitle(customTitleView);
         AlertDialog aboutDialog = builder.create();
         aboutDialog.show();
-    }
+    }*/
 
-    public static class MapSectionFragment extends Fragment {
+    public static class MapSectionFragment extends SupportMapFragment {
 
     	private View rootView;
     	private GoogleMap mMap;
-    	private GroundOverlay mapOverlay;
-    	public boolean debug = false;
+    	private GroundOverlay arnoldMap;
+    	private boolean debug = false;
     	private LatLngBounds arnoldArboretum;
     	private Circle[] circleO;
     	private Circle[] circleI;
     	private Marker[] marker;
     	private Marker locationMarker;
-    	private NodeManager node[];
-    	GoogleMap.OnCameraChangeListener zoomListener;
-    	float minZoom = 10, maxZoom = 10, lastZoom = 10;
+    	//private NodeManager node[];
+    	/*private final GoogleMap.OnCameraChangeListener zoomListener = new GoogleMap.OnCameraChangeListener() {
+			@Override
+			public void onCameraChange(CameraPosition cPos) {
+				if (!dontListen) {
+					checkZoom(200);
+				}
+				dontListen = false;
+			}
+		};*/
+    	private float minZoom = 10, maxZoom = 10, lastZoom = 10;
     	private View zoomIn, zoomOut;
     	private CameraPosition curPos;
     	private boolean shouldReset = true;
+    	private boolean dontListen = false;
+    	//private MapFragmentListener mCallback;
     	
+    	public MapSectionFragment() {
+    		super();
+    	}
     	/*@Override
     	public void onAttach(Activity activity) {
     		super.onAttach(activity);
@@ -483,32 +657,120 @@ public class MainActivity extends SherlockFragmentActivity implements ActionBar.
     	}*/
 
     	@Override
+    	public void onLowMemory() {
+    		super.onLowMemory();
+    		BugSenseHandler.addCrashExtraData("Map", "onLowMemory");
+    		Log.v("Map", "onLowMemory");
+    	}
+    	
+    	/*@Override
         public void onCreate(Bundle savedInstanceState) {
     		super.onCreate(savedInstanceState);
     		Log.v("Map", "onCreate");
     		//if (savedInstanceState != null)
     			//Log.v("Map", "onCreate wasRetained");
     		shouldReset = true;
-    	}
+    	}*/
+
+    	//public static interface MapFragmentListener {
+        //    void onMapReady();
+        //}
+
+    	//public static MapSectionFragment newInstance() {
+        //    return new MapSectionFragment();
+        //}
+
+    	/*@Override
+        public void onAttach(Activity activity) {
+            super.onAttach(activity);
+            try {
+                mCallback = (MapFragmentListener) getActivity();
+            } catch (ClassCastException e) {
+                throw new ClassCastException(getActivity().getClass().getName() + " must implement OnGoogleMapFragmentListener");
+            }
+        }*/
     	
     	@Override
         public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-    		Log.v("Map", "onCreateView");
-    		//if (savedInstanceState != null)
-    			//Log.v("Map", "onCreateView wasRetained");
+    		rootView = super.onCreateView(inflater, container, savedInstanceState);
+
+    		//Log.v("Map", "onCreateView");
+    		/*try {
+	    		if (savedInstanceState.getBoolean("debug")) {
+	    			debug = savedInstanceState.getBoolean("debug");
+	    		}
+    		}
+    		catch (NullPointerException e) {
+    			//e.printStackTrace();
+    		}*/
+            //rootView = inflater.inflate(R.layout.fragment_map, container, false);
+            //if (mCallback != null) {
+            //    mCallback.onMapReady();
+            //}
+
+    		// TODO API14 --> API11
+    		ArrayList<View> zOut = new ArrayList<View>(0);
+	    	rootView.findViewsWithText(zOut, "Zoom Out", View.FIND_VIEWS_WITH_CONTENT_DESCRIPTION);
+	    	if (zOut.size() > 0) {
+		    	zoomOut = zOut.get(0);
+	    	}
+    		ArrayList<View> zIn = new ArrayList<View>(0);
+	    	rootView.findViewsWithText(zIn, "Zoom In", View.FIND_VIEWS_WITH_CONTENT_DESCRIPTION);
+	    	if (zIn.size() > 0) {
+		    	zoomIn = zIn.get(0);
+	    	}
+	    	
     		setRetainInstance(true);
-            rootView = inflater.inflate(R.layout.fragment_map, container, false);
-            setUpMap();
-            toggleDebug(debug);
             return rootView;
         }
+    	
+    	@Override
+    	public void onStart() {
+    		super.onStart();
+    		rootView.post(new Runnable() {
+				@Override
+				public void run() {
+		            setUpMap();
+	            	//toggleDebug(debug);
+	                try {
+	                	toggleDebug(debug);
+	                }
+	                catch (NullPointerException e) {
+	                	e.printStackTrace();
+	                	BugSenseHandler.sendException(e);
+	                	if (mMap != null) {
+		                	mMap.setOnMapLoadedCallback(new GoogleMap.OnMapLoadedCallback() {
+		    					@Override
+		    					public void onMapLoaded() {
+		    						toggleDebug(debug);
+		    		            	mMap.setOnMapLoadedCallback(null);
+		    					}
+		    				});
+	                	}
+	                	else {
+	                		BugSenseHandler.addCrashExtraData("MapFragment", "mMap is null!");
+	                	}
+	                }
+				}
+			});
+            //toggleDebug(debug);
+    		//updateNodes();
+    	}
+
+    	@Override
+    	public void onStop() {
+    		super.onStop();
+    		// TODO memory management, both of these are causing problems
+    		removeNodes();
+    		//mMap = null;
+    	}
 
         private void setUpMap() {
             if (mMap == null) {
-            	SupportMapFragment mapFragment = (SupportMapFragment) getFragmentManager().findFragmentById(R.id.map);
-            	mapFragment.setRetainInstance(true);
-                mMap = mapFragment.getMap();
+                mMap = getMap();
+        		Log.v("Map", "setUpMap");
                 if (mMap != null) {
+                    mMap.setMapType(GoogleMap.MAP_TYPE_NONE);
                     //mMap.getMyLocation();
                     //42.301361, -71.119089
                     //42.295713, -71.118213
@@ -521,15 +783,16 @@ public class MainActivity extends SherlockFragmentActivity implements ActionBar.
                     //LatLng arnoldArboretumSW = new LatLng(42.296335, -71.121215);
                     //LatLng arnoldArboretumNE = new LatLng(42.300715, -71.113227);
                     arnoldArboretum = new LatLngBounds(arnoldArboretumSW, arnoldArboretumNE);
-                    GroundOverlayOptions arnoldMap = new GroundOverlayOptions()
+                    final GroundOverlayOptions arnoldMapOptions = new GroundOverlayOptions()
                     	.image(BitmapDescriptorFactory.fromResource(R.drawable.arnold_arboretum))
+                    	.visible(false)
                     	.positionFromBounds(arnoldArboretum);
                     	//.bearing(0.4f);
-        			double px = 0.00001;
+        			final double px = 0.00001;
                     arnoldArboretumSW = new LatLng(42.295670 + px*3, -71.121990 + px*2);
                     arnoldArboretumNE = new LatLng(42.301375 - px*3, -71.112375 - px*2);
                     arnoldArboretum = new LatLngBounds(arnoldArboretumSW, arnoldArboretumNE);
-                    mapOverlay = mMap.addGroundOverlay(arnoldMap);
+                    arnoldMap = mMap.addGroundOverlay(arnoldMapOptions);
                     mMap.getUiSettings().setCompassEnabled(true);
                     //mMap.setLocationSource(null);
             		locationMarker = mMap.addMarker((new MarkerOptions())
@@ -539,36 +802,15 @@ public class MainActivity extends SherlockFragmentActivity implements ActionBar.
         					.anchor(0.5f, 0.5f)
         					.visible(false)
         			);
-            		zoomListener = new GoogleMap.OnCameraChangeListener() {
-						@Override
-						public void onCameraChange(CameraPosition cPos) {
-		           	    	Log.v("Map", "onCameraChange");
-							if (Math.round(cPos.zoom*100) < minZoom*100 || Math.round(cPos.zoom*100) > maxZoom*100) {
-					        	mMap.setOnCameraChangeListener(new GoogleMap.OnCameraChangeListener() {
-					           	    @Override
-					           	    public void onCameraChange(CameraPosition cPos) {
-										lastZoom = Math.round(cPos.zoom*100)/100.0f;
-					           			checkCamera();
-					           	        mMap.setOnCameraChangeListener(zoomListener);
-					           	    }
-					           	});
-							}
-							else {
-								lastZoom = Math.round(cPos.zoom*100)/100.0f;
-			           			checkCamera();
-							}
-							if (zoomOut != null) {
-								zoomIn.setEnabled(Math.round(cPos.zoom*100) < maxZoom*100);
-								zoomOut.setEnabled(Math.round(cPos.zoom*100) > minZoom*100);
-							}
-							if (Math.round(cPos.zoom*100) < minZoom*100) {
-								mMap.animateCamera(CameraUpdateFactory.zoomTo(minZoom), 200, null);
-							}
-							else if (Math.round(cPos.zoom*100) > maxZoom*100) {
-								mMap.animateCamera(CameraUpdateFactory.zoomTo(maxZoom), 200, null);
-							}
-						}
-					};
+	            	mMap.setOnCameraChangeListener(new GoogleMap.OnCameraChangeListener() {
+	        			@Override
+	        			public void onCameraChange(CameraPosition cPos) {
+	        				if (!dontListen) {
+	        					checkZoom(200);
+	        				}
+	        				dontListen = false;
+	        			}
+	        		});
                 }
             }
         }
@@ -576,12 +818,16 @@ public class MainActivity extends SherlockFragmentActivity implements ActionBar.
         public void updateLocation(double lat, double lon, double acc) {
         	if (locationMarker != null) {
         		//Log.v("Map", "isZooming: " + isZooming());
-        		if (!mMap.isMyLocationEnabled() && !isZooming()) {
+        		// TODO 
+	            LatLng latlng = new LatLng(lat, lon);
+	        	locationMarker.setPosition(latlng);
+	        	if (!locationMarker.isVisible()) {
+	        		locationMarker.setVisible(true);
+	        	}
+        		if (!mMap.isMyLocationEnabled() && !isZooming() && arnoldMap.isVisible() && !dontListen) {
     	        	//int px = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 5, getResources().getDisplayMetrics());
-		            LatLng latlng = new LatLng(lat, lon);
-		        	locationMarker.setPosition(latlng);
-		        	acc = Math.min(Math.max(acc, 0), 10)/10;
-		        	locationMarker.setAlpha(0.75f - (float)acc*0.5f);
+		        	//acc = Math.min(Math.max(acc, 0), 10)/10;
+		        	//locationMarker.setAlpha(0.75f - (float)acc*0.5f);
 		        	//mMap.moveCamera(CameraUpdateFactory.newLatLng(latlng));
 		        	LatLngBounds c = mMap.getProjection().getVisibleRegion().latLngBounds;
 		        	double cCLat = mMap.getCameraPosition().target.latitude;
@@ -613,131 +859,221 @@ public class MainActivity extends SherlockFragmentActivity implements ActionBar.
 		        	lat += scrollY;
 		        	lon += scrollX;
 		            latlng = new LatLng(lat, lon);
-		            mMap.setOnCameraChangeListener(null);
-		        	mMap.moveCamera(CameraUpdateFactory.newLatLng(latlng));
-		            mMap.setOnCameraChangeListener(zoomListener);
+		        	//mMap.setOnCameraChangeListener(new GoogleMap.OnCameraChangeListener() {
+		           	//    @Override
+		           	//    public void onCameraChange(CameraPosition cPos) {
+		           	//        mMap.setOnCameraChangeListener(zoomListener);
+		           	//    }
+		           	//});
+		            //mMap.setOnCameraChangeListener(null);
+		            dontListen = true;
+		        	mMap.animateCamera(CameraUpdateFactory.newLatLng(latlng), 200, new GoogleMap.CancelableCallback() {
+						@Override
+						public void onFinish() {
+				            dontListen = false;
+						}
+						@Override
+						public void onCancel() {
+				            dontListen = false;
+							//Log.v("Map", "updateLocation cancelled!");
+						}
+					});
+		            //mMap.setOnCameraChangeListener(zoomListener);
 		    		//mMap.moveCamera(CameraUpdateFactory.scrollBy(scrollX, scrollY));
-		        	if (!locationMarker.isVisible()) {
-		        		locationMarker.setVisible(true);
-		        	}
         		}
         	}
         }
         
         private boolean isZooming() {
         	//Log.v("Map", "isZooming: " + Math.round(mMap.getCameraPosition().zoom*100) + ", " + Math.round(lastZoom*100));
-        	if (Math.round(mMap.getCameraPosition().zoom*100) != Math.round(lastZoom*100)) {
+        	if (Math.round(mMap.getCameraPosition().zoom*100) != lastZoom*100) {
         		return true;
         	}
         	//lastZoom = mMap.getCameraPosition().zoom;
         	return false;
         }
 
-        private void checkCamera() {
-        		if (!mMap.isMyLocationEnabled()) {
-		        	LatLngBounds c = mMap.getProjection().getVisibleRegion().latLngBounds;
-		        	double cCLat = mMap.getCameraPosition().target.latitude;
-		        	double cCLon = mMap.getCameraPosition().target.longitude;
-		        	double cN = c.northeast.latitude;
-		        	double cS = c.southwest.latitude;
-		        	double cE = c.northeast.longitude;
-		        	double cW = c.southwest.longitude;
-		        	double N = arnoldArboretum.northeast.latitude;
-		        	double S = arnoldArboretum.southwest.latitude;
-		        	double E = arnoldArboretum.northeast.longitude;
-		        	double W = arnoldArboretum.southwest.longitude;
-        			//if (N - S < cN - cS - 0.00005 || E - S < cE - cS - 0.00005) {
-        			//	fitCamera(false);
-        			//	return;
-        			//}
-		        	double scrollX = 0;
-		        	double scrollY = 0;
-		        	if (cN > N) {
-		    			scrollY = (N - cN);
-		    		}
-		        	else if (cS < S) {
-		    			scrollY = (S - cS);
-		    		}
-		        	if (cE > E) {
-		    			scrollX = (E - cE);
-		    		}
-		        	else if (cW < W) {
-		    			scrollX = (W - cW);
-		    		}
-		        	if (scrollX != 0 || scrollY != 0) {
-			        	cCLat += scrollY;
-			        	cCLon += scrollX;
-			        	LatLng latlng = new LatLng(cCLat, cCLon);
-			            //mMap.setOnCameraChangeListener(null);
-			        	mMap.animateCamera(CameraUpdateFactory.newLatLng(latlng), 200, null);
-			            //mMap.setOnCameraChangeListener(zoomListener);
-		        	}
-        		}
+        private void checkCamera(int duration) {
+    		if (!mMap.isMyLocationEnabled()) {
+    			if (locationMarker.isVisible()) {
+    				dontListen = false;
+    				//Log.v("Map", "HERE");
+    	        	if (!arnoldMap.isVisible()) {
+    					arnoldMap.setVisible(true);
+    	        	}
+    				updateLocation(locationMarker.getPosition().latitude, locationMarker.getPosition().longitude, 0);
+    				return;
+    			}
+	        	LatLngBounds c = mMap.getProjection().getVisibleRegion().latLngBounds;
+	        	double cCLat = mMap.getCameraPosition().target.latitude;
+	        	double cCLon = mMap.getCameraPosition().target.longitude;
+	        	double cN = c.northeast.latitude;
+	        	double cS = c.southwest.latitude;
+	        	double cE = c.northeast.longitude;
+	        	double cW = c.southwest.longitude;
+	        	double N = arnoldArboretum.northeast.latitude;
+	        	double S = arnoldArboretum.southwest.latitude;
+	        	double E = arnoldArboretum.northeast.longitude;
+	        	double W = arnoldArboretum.southwest.longitude;
+    			//if (N - S < cN - cS - 0.00005 || E - S < cE - cS - 0.00005) {
+    			//	fitCamera(false);
+    			//	return;
+    			//}
+	        	double scrollX = 0;
+	        	double scrollY = 0;
+	        	if (cN > N) {
+	    			scrollY = (N - cN);
+	    		}
+	        	else if (cS < S) {
+	    			scrollY = (S - cS);
+	    		}
+	        	if (cE > E) {
+	    			scrollX = (E - cE);
+	    		}
+	        	else if (cW < W) {
+	    			scrollX = (W - cW);
+	    		}
+	        	if (scrollX != 0 || scrollY != 0) {
+		        	cCLat += scrollY;
+		        	cCLon += scrollX;
+		        	LatLng latlng = new LatLng(cCLat, cCLon);
+		        	dontListen = true;
+		        	mMap.animateCamera(CameraUpdateFactory.newLatLng(latlng), duration, new GoogleMap.CancelableCallback() {
+						@Override
+						public void onFinish() {
+							if (!arnoldMap.isVisible()) {
+								arnoldMap.setVisible(true);
+								System.gc();
+							}
+						}
+						@Override
+						public void onCancel() {
+							Log.v("Map", "checkCamera cancelled!");
+						}
+					});
+	        	}
+	        	else if (!arnoldMap.isVisible()) {
+					arnoldMap.setVisible(true);
+	        	}
+    		}
+        }
+        
+        private void checkZoom(int duration) {
+    		if (!mMap.isMyLocationEnabled()) {
+	        	CameraPosition cPos = mMap.getCameraPosition();
+	        	float zoom = 0;
+				if (zoomOut != null) {
+					zoomIn.setEnabled(Math.round(cPos.zoom*100) < maxZoom*100);
+					zoomOut.setEnabled(Math.round(cPos.zoom*100) > minZoom*100);
+				}
+				if (Math.round(cPos.zoom*100) < minZoom*100) {
+					zoom = minZoom;
+				}
+				else if (Math.round(cPos.zoom*100) > maxZoom*100) {
+					zoom = maxZoom;
+				}
+				if (zoom != 0) {
+		        	final int dur = duration;
+		        	final float z = zoom;
+		        	dontListen = true;
+					mMap.animateCamera(CameraUpdateFactory.zoomTo(zoom), duration, new GoogleMap.CancelableCallback() {
+						@Override
+						public void onFinish() {
+							lastZoom = z;
+	            			checkCamera(dur);
+						}
+						@Override
+						public void onCancel() {
+							Log.v("Map", "checkZoom cancelled!");
+						}
+					});
+				}
+				else {
+					lastZoom = Math.round(cPos.zoom*100)/100.0f;
+        			checkCamera(duration);
+					if (!arnoldMap.isVisible()) {
+						arnoldMap.setVisible(true);
+					}
+				}
+    		}
         }
         
         public void noLock() {
         	if (locationMarker != null) {
         		if (locationMarker.isVisible()) {
         			locationMarker.setVisible(false);
-        			fitCamera();
+        			//fitCamera();
         		}
         	}
         }
         
         public void toggleDebug(boolean dbg) {
-    		Log.v("Map", "toggleDebug");
+        	System.gc();
+    		//Log.v("Map", "toggleDebug");
         	debug = dbg;
             if (debug) {
-            	mMap.setOnCameraChangeListener(null);
-            	mapOverlay.setTransparency(0.5f);
-                mMap.setMyLocationEnabled(true);
-                mMap.setMapType(GoogleMap.MAP_TYPE_NORMAL);
+            	//mMap.setOnCameraChangeListener(null);
+            	//arnoldMap.setTransparency(0.5f);
+            	if (arnoldMap.isVisible()) {
+            		arnoldMap.setVisible(false);
+            	}
+            	if (!mMap.isMyLocationEnabled())
+            		mMap.setMyLocationEnabled(true);
+                if (mMap.getMapType() != GoogleMap.MAP_TYPE_NORMAL)
+                	mMap.setMapType(GoogleMap.MAP_TYPE_NORMAL);
                 mMap.getUiSettings().setAllGesturesEnabled(true);
-                mMap.getUiSettings().setMyLocationButtonEnabled(true);
-			    zoomOut.setEnabled(true);
-			    zoomOut.setAlpha(1);
-			    zoomIn.setEnabled(true);
-			    zoomIn.setAlpha(1);
-                addNodes();
+            	if (!mMap.getUiSettings().isMyLocationButtonEnabled())
+            		mMap.getUiSettings().setMyLocationButtonEnabled(true);
+                if (zoomOut != null) {
+                	zoomOut.setEnabled(true);
+                	//zoomOut.setAlpha(1);
+                	zoomIn.setEnabled(true);
+                	//zoomIn.setAlpha(1);
+                }
+                //addNodes();
         		updateNodes();
             }
             else {
-            	mMap.setOnCameraChangeListener(zoomListener);
-            	if (rootView.getWidth() == 0) {
-            		mMap.setOnCameraChangeListener(new GoogleMap.OnCameraChangeListener() {
-	            	    @Override
-	            	    public void onCameraChange(CameraPosition arg) {
-	            	    	//if (!debug) {
-	            	    	fitCamera();
-	            	    	//}
-	            	        //mMap.setOnCameraChangeListener(zoomListener);
-	            	    }
-	            	});
-            		mMap.moveCamera(CameraUpdateFactory.scrollBy(1, 0));
+                removeNodes();
+                if (mMap.getMapType() != GoogleMap.MAP_TYPE_NONE)
+                	mMap.setMapType(GoogleMap.MAP_TYPE_NONE);
+            	arnoldMap.setVisible(false);
+            	/*if (rootView.getWidth() == 0) {
+            		dontListen = true;
+            		mMap.animateCamera(CameraUpdateFactory.scrollBy(1, 0), 1, new GoogleMap.CancelableCallback() {
+						@Override
+						public void onFinish() {
+		            		fitCamera();
+						}
+						@Override
+						public void onCancel() {
+							Log.v("Map", "toogleDebug cancelled!");
+						}
+					});
             	}
-            	else {
+            	else {*/
             		fitCamera();
-            		//checkCamera();
-            	}
-                //mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(arnoldArboretum.getCenter(), 17.0f));
-            	mapOverlay.setTransparency(0.0f);
-                mMap.setMyLocationEnabled(false);
-                mMap.setMapType(GoogleMap.MAP_TYPE_NONE);
+            	//}
+            	//arnoldMap.setTransparency(0.0f);
+            	if (mMap.isMyLocationEnabled())
+            		mMap.setMyLocationEnabled(false);
                 mMap.getUiSettings().setAllGesturesEnabled(false);
-                mMap.getUiSettings().setZoomControlsEnabled(true);
+            	//if (!mMap.getUiSettings().isZoomControlsEnabled())
+            		//mMap.getUiSettings().setZoomControlsEnabled(true);
                 //mMap.getUiSettings().setRotateGesturesEnabled(false);
                 //mMap.getUiSettings().setScrollGesturesEnabled(false);
                 //mMap.getUiSettings().setTiltGesturesEnabled(false);
-                mMap.getUiSettings().setMyLocationButtonEnabled(false);
-                removeNodes();
+            	if (mMap.getUiSettings().isMyLocationButtonEnabled())
+            		mMap.getUiSettings().setMyLocationButtonEnabled(false);
             }
         }
-        
+                
         public void fitCamera() {
 	    	curPos = mMap.getCameraPosition();
-    		mMap.setOnCameraChangeListener(new GoogleMap.OnCameraChangeListener() {
-        	    @Override
-        	    public void onCameraChange(CameraPosition arg) {
+	    	dontListen = true;
+    		mMap.animateCamera(CameraUpdateFactory.newLatLngBounds(arnoldArboretum, 0), 1, new GoogleMap.CancelableCallback() {
+				@Override
+				public void onFinish() {
             		double N = arnoldArboretum.northeast.latitude;
             		double S = arnoldArboretum.southwest.latitude;
             		double E = arnoldArboretum.northeast.longitude;
@@ -761,56 +1097,58 @@ public class MainActivity extends SherlockFragmentActivity implements ActionBar.
         	    		float realHeight = (rootView.getWidth()/width)*height;
         	    		padding = (int)(height - realHeight)/2;
             		}
-            		ArrayList<View> zOut = new ArrayList<View>(0);
-        	    	rootView.findViewsWithText(zOut, "Zoom Out", View.FIND_VIEWS_WITH_CONTENT_DESCRIPTION);
-        	    	if (zOut.size() > 0) {
-        		    	zoomOut = zOut.get(0);
-        	    	}
-            		ArrayList<View> zIn = new ArrayList<View>(0);
-        	    	rootView.findViewsWithText(zIn, "Zoom In", View.FIND_VIEWS_WITH_CONTENT_DESCRIPTION);
-        	    	if (zIn.size() > 0) {
-        		    	zoomIn = zIn.get(0);
-        	    	}
-            		mMap.setOnCameraChangeListener(new GoogleMap.OnCameraChangeListener() {
-                	    @Override
-                	    public void onCameraChange(CameraPosition arg) {
+        	    	dontListen = true;
+            		mMap.animateCamera(CameraUpdateFactory.newLatLngBounds(arnoldArboretum, padding), 1, new GoogleMap.CancelableCallback() {
+						@Override
+						public void onFinish() {
                 	    	float preMinZoom = minZoom;
                     		minZoom = Math.round(mMap.getCameraPosition().zoom*100)/100.0f;
                     		//maxZoom = Math.max(minZoom + 2, maxZoom);
                     		maxZoom = minZoom + 2;
-                    		if (!shouldReset) {
-                    			if (lastZoom == preMinZoom) {
-                    				lastZoom = minZoom;
-                    			}
-                    			else {
-                    				lastZoom = Math.max(Math.min(curPos.zoom, maxZoom), minZoom);
-                    			}
-                        		mMap.setOnCameraChangeListener(new GoogleMap.OnCameraChangeListener() {
-                            	    @Override
-                            	    public void onCameraChange(CameraPosition arg) {
-                            			checkCamera();
-                            	        mMap.setOnCameraChangeListener(zoomListener);
-                            	    }
-                            	});
-                    			mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(curPos.target, lastZoom));
+                    		if (!shouldReset && lastZoom != preMinZoom) {
+								//Log.v("Map", "Shouldn't reset");
+                    			lastZoom = Math.max(Math.min(curPos.zoom, maxZoom), minZoom);
+                    	    	dontListen = true;
+                    			mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(curPos.target, lastZoom), 1, new GoogleMap.CancelableCallback() {
+									@Override
+									public void onFinish() {
+										System.gc();
+										checkZoom(1);
+									}
+									
+									@Override
+									public void onCancel() {
+										Log.v("Map", "fitCamera 2 cancelled!");
+									}
+								});
                     		}
                     		else {
                         		lastZoom = minZoom;
-							    zoomOut.setEnabled(false);
-                    	        mMap.setOnCameraChangeListener(zoomListener);
+                        		if (zoomOut != null) {
+                        			zoomOut.setEnabled(false);
+                        		}
+                        		System.gc();
+                    	        //mMap.setOnCameraChangeListener(zoomListener);
                     		}
                     		shouldReset = false;
-                	    }
-                	});
-            		mMap.moveCamera(CameraUpdateFactory.newLatLngBounds(arnoldArboretum, padding));
-        	    }
-        	});
-    		mMap.moveCamera(CameraUpdateFactory.newLatLngBounds(arnoldArboretum, 0));
+						}
+						
+						@Override
+						public void onCancel() {
+							Log.v("Map", "fitCamera 2 cancelled!");
+						}
+					});
+				}
+				@Override
+				public void onCancel() {
+					Log.v("Map", "fitCamera 1 cancelled!");
+				}
+			});
         }
         
         public void addNodes() {
-        	if (GPSService.node != null) {
-        		node = GPSService.node;
+        	if (debug && gpsService.node != null && marker == null) {
+        		NodeManager node[] = gpsService.node;
         		circleO = new Circle[node.length];
         		circleI = new Circle[node.length];
         		marker = new Marker[node.length];
@@ -822,7 +1160,6 @@ public class MainActivity extends SherlockFragmentActivity implements ActionBar.
         					.strokeWidth(5)
         					.strokeColor(Color.argb(127, 0, 0, 0))
         					.zIndex(2)
-        					.visible(false)
         			);
         			if (node[i].getRadI() > 0) {
         				circleI[i] = mMap.addCircle((new CircleOptions())
@@ -831,14 +1168,12 @@ public class MainActivity extends SherlockFragmentActivity implements ActionBar.
 	        					.strokeWidth(2)
 	        					.strokeColor(Color.argb(63, 0, 0, 0))
 	        					.zIndex(1)
-	        					.visible(false)
 	        			);
         			}
         			marker[i] = mMap.addMarker((new MarkerOptions())
         					.position(latlon)
         					.icon(BitmapDescriptorFactory.fromResource(R.drawable.map_marker))
         					.anchor(0.5f, 0.5f)
-        					.visible(false)
         			);
         		}
         	}
@@ -848,7 +1183,8 @@ public class MainActivity extends SherlockFragmentActivity implements ActionBar.
         	if (marker != null) {
 	    		for (int i = 0; i < marker.length; i++) {
 					circleO[i].remove();
-					circleI[i].remove();
+					if (circleI[i] != null)
+						circleI[i].remove();
 					marker[i].remove();
 	    		}
         	}
@@ -858,15 +1194,19 @@ public class MainActivity extends SherlockFragmentActivity implements ActionBar.
         }
         
         public void updateNodes() {
-        	if (debug && marker != null) {
-	        	int color, colorS;
-				int colorI = getResources().getColor(R.color.holo_blue_bright);
-				int colorA = getResources().getColor(R.color.holo_red_bright);
-	        	node = GPSService.node;
-	        	if (node.length != marker.length) {
+        	if (debug && gpsService.node != null) {
+        		NodeManager node[] = gpsService.node;
+        		if (marker == null) {
+        			addNodes();
+        			//return;
+        		}
+        		else if (node.length != marker.length) {
 	        		removeNodes();
 	        		addNodes();
 	        	}
+	        	int color, colorS;
+				int colorI = getResources().getColor(R.color.holo_blue_bright);
+				int colorA = getResources().getColor(R.color.holo_red_bright);
 	    		for (int i = 0; i < node.length; i++) {
 	            	LatLng latlon = new LatLng(node[i].getLat(), node[i].getLon());
 	    			if (node[i].isPlaying()) {
@@ -909,42 +1249,38 @@ public class MainActivity extends SherlockFragmentActivity implements ActionBar.
     }
 
     public void onTrackingToggled(View view) {
+    	ToggleButton tb = (ToggleButton) view;
 		boolean on = tb.isChecked();
 
 		if (on) {
 			//final Handler handler = new Handler();
-			handler.post(GPSDialog);
 			gpsService.startTracking();
+			handler.post(GPSDialog);
 		}
 		else {
 			gpsService.stopTracking();
 		}
 	}
 
-	public void onAbout(MenuItem item) {
-		showAboutDialog();
-	}
+	//public void onAbout(MenuItem item) {
+		//showAboutDialog();
+	//}
 
 	public void onReset(MenuItem item) {
-		NodeManager.reset();
-    	NodeManager[] node = GPSService.node;
+    	NodeManager[] node = gpsService.node;
 		for (int i = 0; i < node.length; i++) {
 			if (node[i].isPlaying())
-				node[i].stopReset();
+				node[i].stop();
 		}
+		NodeManager.reset();
 	}
 
 	public void onDebug(MenuItem item) {
-		mapFragment.debug = !mapFragment.debug;
-		mapFragment.toggleDebug(mapFragment.debug);
-		item.setChecked(mapFragment.debug);
-		if (mapFragment.debug) {
-			stats.setVisibility(View.VISIBLE);
-			mainBg.setVisibility(View.INVISIBLE);
-		}
-		else {
-			stats.setVisibility(View.INVISIBLE);
-			mainBg.setVisibility(View.VISIBLE);
+		if (mapFragment != null && mainFragment != null) {
+			mapFragment.debug = !mapFragment.debug;
+			mapFragment.toggleDebug(mapFragment.debug);
+			mainFragment.toggleDebug(mapFragment.debug);
+			item.setChecked(mapFragment.debug);
 		}
 	}
 
@@ -953,57 +1289,78 @@ public class MainActivity extends SherlockFragmentActivity implements ActionBar.
 	}
     
     private void setTabsWidth() {
-    	try {
+    	//try {
 			//DisplayMetrics displaymetrics = new DisplayMetrics();
 			//getWindowManager().getDefaultDisplay().getMetrics(displaymetrics);
 			//int screenWidth = displaymetrics.widthPixels;
 			//final ActionBar actionBar = getSupportActionBar();
-	    	float px = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 8, getResources().getDisplayMetrics());
 	    	Window window = getWindow();
-		    View rootView = window.getDecorView();
+		    final View rootView = window.getDecorView();
 		    int resId = getResources().getIdentifier("action_bar", "id", "android");
-		    ViewGroup actionBarView = (ViewGroup) rootView.findViewById(resId);
-		    //ViewGroup tabScrollView = (ViewGroup) actionBarView.getChildAt(1);
-		    HorizontalScrollView tabScrollView = (HorizontalScrollView) actionBarView.getChildAt(1);
-		    //tabScrollView.setScrollContainer(false);
-		    ViewGroup optionsView = (ViewGroup) actionBarView.getChildAt(2);
-		    LinearLayout tabBarView = (LinearLayout) tabScrollView.getChildAt(0);
-		    ViewGroup tabView = (ViewGroup) tabBarView.getChildAt(0);
-		    //ViewGroup.LayoutParams oLayoutParams = (ViewGroup.LayoutParams) optionsView.getLayoutParams();
-		    //oLayoutParams.setMargins(0, 0, 0, 0);
-		    //optionsView.setLayoutParams(oLayoutParams);
-		    android.app.ActionBar.LayoutParams tsLayoutParams = (android.app.ActionBar.LayoutParams) tabScrollView.getLayoutParams();
-		    tsLayoutParams.width = rootView.getWidth() - optionsView.getWidth();
-		    tsLayoutParams.setMargins(0, 0, 0, 0);
-		    tabScrollView.setLayoutParams(tsLayoutParams);
-		    FrameLayout.LayoutParams tbLayoutParams = (FrameLayout.LayoutParams) tabBarView.getLayoutParams();
-		    tbLayoutParams.width = rootView.getWidth() - optionsView.getWidth();
-		    tsLayoutParams.gravity = Gravity.FILL_HORIZONTAL;
-		    LinearLayout.LayoutParams tabLayoutParams = (LinearLayout.LayoutParams) tabView.getLayoutParams();
-		    tabLayoutParams.width = (rootView.getWidth() - optionsView.getWidth() - (int)px)/3;
-		    tabView.setLayoutParams(tabLayoutParams);
-		    tabView.setPadding(0, 0, 0, 0);
-		    //tabLayoutParams.width = tabScrollView.getWidth();
-		    //tabView.setLayoutParams(tabLayoutParams);
-		    //final View tabView = actionBar.getTabAt(0).getCustomView();
-			//Log.v("TAB", "" + actionBarView.getChildCount());
-			//Log.v("TAB", "" + tabScrollView.toString());
-			//Log.v("TAB", "" + tabScrollView.getWidth());
-			//Log.v("TAB", "" + tsLayoutParams.gravity);
-			//Log.v("TAB", "" + tabBarView.getWidth());
-			//Log.v("TAB", "" + tabView.getWidth());
-			//Log.v("TAB", "" + tabView.getMinimumWidth());
-			//final View tabContainerView = (View) tabView.getParent();
-			//final int tabPadding = tabContainerView.getPaddingLeft() + tabContainerView.getPaddingRight();
-			//final int tabs = actionBar.getTabCount();
-			//for(int i=0 ; i < tabs ; i++){
-		    //View tab = actionBar.getTabAt(i).getCustomView();
-		    //TextView text1 = (TextView) tab.findViewById(R.id.text1);
-		    //text1.setMaxWidth(screenWidth/tabs-tabPadding-1);
-    	}
-		catch (Exception e) {
-			e.printStackTrace();
-		}
+		    final ViewGroup actionBarView = (ViewGroup) rootView.findViewById(resId);
+		    actionBarView.getViewTreeObserver().addOnPreDrawListener(new ViewTreeObserver.OnPreDrawListener() {
+		    	@Override
+				public boolean onPreDraw() {
+		        	try {
+			        	Log.v(TAG, "TabWidth");
+				    	float px = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 8, getResources().getDisplayMetrics());
+					    //ViewGroup tabScrollView = (ViewGroup) actionBarView.getChildAt(1);
+					    HorizontalScrollView tabScrollView = (HorizontalScrollView) actionBarView.getChildAt(1);
+					    //tabScrollView.setScrollContainer(false);
+					    ViewGroup optionsView = (ViewGroup) actionBarView.getChildAt(2);
+					    LinearLayout tabBarView = (LinearLayout) tabScrollView.getChildAt(0);
+					    ViewGroup tabView = (ViewGroup) tabBarView.getChildAt(0);
+					    //ViewGroup.LayoutParams oLayoutParams = (ViewGroup.LayoutParams) optionsView.getLayoutParams();
+					    //oLayoutParams.setMargins(0, 0, 0, 0);
+					    //optionsView.setLayoutParams(oLayoutParams);
+					    android.app.ActionBar.LayoutParams tsLayoutParams = (android.app.ActionBar.LayoutParams) tabScrollView.getLayoutParams();
+					    tsLayoutParams.width = rootView.getWidth() - optionsView.getWidth();
+					    tsLayoutParams.setMargins(0, 0, 0, 0);
+					    tabScrollView.setLayoutParams(tsLayoutParams);
+					    FrameLayout.LayoutParams tbLayoutParams = (FrameLayout.LayoutParams) tabBarView.getLayoutParams();
+					    tbLayoutParams.width = rootView.getWidth() - optionsView.getWidth();
+					    tsLayoutParams.gravity = Gravity.FILL_HORIZONTAL;
+					    LinearLayout.LayoutParams tabLayoutParams = (LinearLayout.LayoutParams) tabView.getLayoutParams();
+					    tabLayoutParams.width = (rootView.getWidth() - optionsView.getWidth() - (int)px)/3;
+					    tabView.setLayoutParams(tabLayoutParams);
+					    tabView.setPadding(0, 0, 0, 0);
+					    //tabLayoutParams.width = tabScrollView.getWidth();
+					    //tabView.setLayoutParams(tabLayoutParams);
+					    //final View tabView = actionBar.getTabAt(0).getCustomView();
+						//Log.v("TAB", "" + actionBarView.getChildCount());
+						//Log.v("TAB", "" + tabScrollView.toString());
+						//Log.v("TAB", "" + tabScrollView.getWidth());
+						//Log.v("TAB", "" + tsLayoutParams.gravity);
+						//Log.v("TAB", "" + tabBarView.getWidth());
+						//Log.v("TAB", "" + tabView.getWidth());
+						//Log.v("TAB", "" + tabView.getMinimumWidth());
+						//final View tabContainerView = (View) tabView.getParent();
+						//final int tabPadding = tabContainerView.getPaddingLeft() + tabContainerView.getPaddingRight();
+						//final int tabs = actionBar.getTabCount();
+						//for(int i=0 ; i < tabs ; i++){
+					    //View tab = actionBar.getTabAt(i).getCustomView();
+					    //TextView text1 = (TextView) tab.findViewById(R.id.text1);
+					    //text1.setMaxWidth(screenWidth/tabs-tabPadding-1);
+			            // make sure it is not called anymore 
+			        	actionBarView.getViewTreeObserver().removeOnPreDrawListener(this);
+		        	}
+		        	catch (NullPointerException e) {
+		        		//e.printStackTrace();
+						//BugSenseHandler.sendException(e);
+		    		}
+					catch (Exception e) {
+			        	actionBarView.getViewTreeObserver().removeOnPreDrawListener(this);
+						e.printStackTrace();
+						BugSenseHandler.sendException(e);
+					}
+				    return true;
+		        }
+		    });
+    	//}
+		//catch (Exception e) {
+		//	e.printStackTrace();
+		//	BugSenseHandler.sendException(e);
+		//}
 	}
 
 	@Override
@@ -1030,6 +1387,7 @@ public class MainActivity extends SherlockFragmentActivity implements ActionBar.
 	    }
 	    catch (Exception e) {
 	        Log.e(TAG, "Error marking actionbar embedded", e);
+	        BugSenseHandler.sendException(e);
 	    }
 	}
 }

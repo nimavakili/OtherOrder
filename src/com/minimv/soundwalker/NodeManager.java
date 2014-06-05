@@ -1,6 +1,13 @@
 package com.minimv.soundwalker;
 
 import java.io.IOException;
+import java.util.Timer;
+import java.util.TimerTask;
+
+import com.bugsense.trace.BugSenseHandler;
+
+
+
 //import com.minimv.soundwalker.R;
 import android.content.Context;
 import android.content.SharedPreferences;
@@ -8,7 +15,7 @@ import android.location.Location;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
 import android.util.Log;
-//import android.widget.Toast;
+import android.widget.Toast;
 
 public class NodeManager {
 
@@ -22,13 +29,18 @@ public class NodeManager {
 	private static SharedPreferences lastPositions;
 	private static SharedPreferences.Editor positionEditor;
 	public boolean invalid = false;
+    private Timer timer;
+    private TimerTask timerTask;
+    private int vol = 0, curVol = 0;
+	private final int maxVolume = 100;
+	private final int fadeFactor = 50;
 	
 	public NodeManager(Context context, String p) {
 // TODO: Error handling
 		try {
 			mContext = context;
 			path = GPSService.sdFolder.getAbsolutePath() + "/" + p;
-			String[] split = p.replace(".mp3", "").split(",");
+			String[] split = p.replace(".mp3", "").replace("._", "").split(",");
 			lat = Double.parseDouble(split[0].trim());
 			lon = Double.parseDouble(split[1].trim());
 			if (split.length < 4) {
@@ -45,8 +57,9 @@ public class NodeManager {
 		}
 		catch (Exception e) {
 			invalid = true;
-			//Toast.makeText(context.getApplicationContext(), "Invalid MP3 name format:\n" + p + context.getResources().getString(R.string.invalid_format), Toast.LENGTH_LONG).show();
+			Toast.makeText(context.getApplicationContext(), "Invalid MP3 name format!\n" + p + context.getResources().getString(R.string.invalid_format), Toast.LENGTH_LONG).show();
 			e.printStackTrace();
+	        BugSenseHandler.sendException(e);
 		}
 	}
 		
@@ -117,6 +130,7 @@ public class NodeManager {
 	}
 	
 	public void play() {
+		curVol = 0;
 		preparePlayer();
 		try {
 			mPlayer.prepareAsync();
@@ -136,16 +150,9 @@ public class NodeManager {
 		} catch (IllegalStateException e) {
 			e.printStackTrace();
 		}
-	}
-	
-	public void stopReset() {
-		try {
-			mPlayer.stop();
-			mPlayer.release();
-			mPlayer = null;
-		} catch (IllegalStateException e) {
-			e.printStackTrace();
-		}
+		timer.cancel();
+		timer.purge();
+		curVol = 0;
 	}
 
 	public boolean isPlaying() {
@@ -156,16 +163,51 @@ public class NodeManager {
 	}
 	
 	public float setVolume(double lat, double lon) {
-		int maxVolume = 100;
-		double dist = distanceTo(lat, lon);
-		float vol;
+		if (timer != null) {
+			timer.cancel();
+			timer.purge();
+		}
+
+        double dist = distanceTo(lat, lon);
 		if (radO == radI)
 			vol = maxVolume;
-		else
-			vol = (float)Math.max(((dist - radI)/(radO - radI))*maxVolume, 0);
-		float logVol = 1 - (float)(Math.log(vol)/Math.log(maxVolume));
-		mPlayer.setVolume(logVol, logVol);
+		else {
+			vol = (int) Math.max(((dist - radI)/(radO - radI))*maxVolume, 0);
+			vol = maxVolume - vol;
+		}
+		
+		//Log.v("Volume", "" + vol);
+		
+		if (vol != curVol) {
+			timer = new Timer();
+			timerTask = new TimerTask() {
+		        @Override
+		        public void run() {
+		        	if (vol > curVol)
+		        		curVol++;
+		        	else if (vol < curVol)
+		        		curVol--;
+		            updateVolume();
+		            if (vol == curVol) {
+		                timer.cancel();
+		                timer.purge();
+		            }
+		        }
+		    };
+		    timer.schedule(timerTask, 0, fadeFactor);
+		}
+		
 		return vol;
+	}
+	
+	private void updateVolume() {
+		float logVol = 1 - (float)(Math.log(maxVolume - curVol)/Math.log(maxVolume));
+		try {
+			mPlayer.setVolume(logVol, logVol);
+		}
+		catch (Exception e) {
+			e.printStackTrace();
+		}
 	}
 	
 	public static void reset() {

@@ -2,7 +2,7 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.minimv.soundwalker"
     android:versionCode="1"
-    android:versionName="1.2b" >
+    android:versionName="2.0b" >
 
     <uses-sdk
         android:minSdkVersion="14"
@@ -29,7 +29,7 @@
         android:icon="@drawable/ic_launcher"
         android:label="@string/app_name"
         android:theme="@style/AppTheme"
-        android:persistent="true"
+        android:process="com.minimv.soundwalker"
         android:largeHeap="true" >
         
 		<meta-data android:name="com.google.android.gms.version"
@@ -38,12 +38,14 @@
 		    android:value="AIzaSyCiRr6ryeP3WofaLgcy91YtKg9m1vkp7Kk" />
 	        
 		<!--android:screenOrientation="portrait"
+        android:largeHeap="true"
+			android:uiOptions="splitActionBarWhenNarrow"
 			android:configChanges="keyboardHidden|orientation|screenSize"-->
 		
 		<activity
             android:name="com.minimv.soundwalker.MainActivity"
-            android:label="@string/app_name"
-			android:launchMode="singleInstance" >
+			android:launchMode="singleInstance"
+            android:label="@string/app_name" >
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />

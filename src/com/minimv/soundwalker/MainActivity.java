@@ -742,7 +742,13 @@ public class MainActivity extends SherlockFragmentActivity
 		                	mMap.setOnMapLoadedCallback(new GoogleMap.OnMapLoadedCallback() {
 		    					@Override
 		    					public void onMapLoaded() {
-		    						toggleDebug(debug);
+		    						try {
+		    							toggleDebug(debug);
+		    						}
+		    						catch (NullPointerException e) {
+		    							e.printStackTrace();
+		    							BugSenseHandler.sendException(e);
+		    						}
 		    		            	mMap.setOnMapLoadedCallback(null);
 		    					}
 		    				});

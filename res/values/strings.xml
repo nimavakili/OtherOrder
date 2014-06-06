@@ -22,7 +22,7 @@
     <string name="play_button">Écouter</string>
     <string name="stop_button">Arrêter</string>
     <string name="go_text"><b>How treelike we are,\nHow human the tree</b>\n\nGretel Ehrlich, \"River History\", 1998</string>
-    <string name="version">v2.0b</string>
+    <string name="version">v2.1b</string>
     <string name="outide_map">L\'enregistrement est uniquement possible dans la ville de Montpellier.</string>
     <string name="searching">Acquiring GPS Lock...</string>
     <string name="gps_disabled">GPS Receiver Disabled</string>

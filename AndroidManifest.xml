@@ -2,7 +2,7 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.minimv.soundwalker"
     android:versionCode="1"
-    android:versionName="2.1b" >
+    android:versionName="2.3b" >
 
     <uses-sdk
         android:minSdkVersion="14"
@@ -22,7 +22,7 @@
 	
 	<uses-feature
 	    android:glEsVersion="0x00020000"
-	    android:required="true"/>
+	    android:required="true" />
 		
     <application
         android:allowBackup="true"

@@ -44,6 +44,7 @@ import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.ToggleButton;
 
+
 //import com.google.android.gms.maps.CameraUpdate;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
@@ -265,10 +266,10 @@ public class MainActivity extends SherlockFragmentActivity
         		}
             }
             if (messageAll != -1000) {
-            	String allS = String.valueOf(messageAll);
+            	String all = String.valueOf(messageAll);
 	            //Log.v("Receive", allS);
 				if (mainFragment != null) {
-					mainFragment.all.setText(allS);
+					mainFragment.all.setText(all);
 				}
             }
         }
@@ -736,8 +737,8 @@ public class MainActivity extends SherlockFragmentActivity
 	                	toggleDebug(debug);
 	                }
 	                catch (NullPointerException e) {
-	                	e.printStackTrace();
-	                	BugSenseHandler.sendException(e);
+	                	//e.printStackTrace();
+	                	//BugSenseHandler.sendException(e);
 	                	if (mMap != null) {
 		                	mMap.setOnMapLoadedCallback(new GoogleMap.OnMapLoadedCallback() {
 		    					@Override
@@ -754,7 +755,8 @@ public class MainActivity extends SherlockFragmentActivity
 		    				});
 	                	}
 	                	else {
-	                		BugSenseHandler.addCrashExtraData("MapFragment", "mMap is null!");
+	                		BugSenseHandler.sendException(new NullPointerException("mMap is null!"));
+	                		//BugSenseHandler.addCrashExtraData("MapFragment", "mMap is null!");
 	                	}
 	                }
 				}
@@ -1020,9 +1022,9 @@ public class MainActivity extends SherlockFragmentActivity
             if (debug) {
             	//mMap.setOnCameraChangeListener(null);
             	//arnoldMap.setTransparency(0.5f);
-            	if (arnoldMap.isVisible()) {
+            	//if (arnoldMap.isVisible()) {
             		arnoldMap.setVisible(false);
-            	}
+            	//}
             	if (!mMap.isMyLocationEnabled())
             		mMap.setMyLocationEnabled(true);
                 if (mMap.getMapType() != GoogleMap.MAP_TYPE_NORMAL)
@@ -1273,10 +1275,8 @@ public class MainActivity extends SherlockFragmentActivity
 	//}
 
 	public void onReset(MenuItem item) {
-    	NodeManager[] node = gpsService.node;
-		for (int i = 0; i < node.length; i++) {
-			if (node[i].isPlaying())
-				node[i].stop();
+		if (gpsService != null) {
+			gpsService.stopAllNodes();
 		}
 		NodeManager.reset();
 	}

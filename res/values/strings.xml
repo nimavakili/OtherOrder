@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name"><b>Other Order</b></string>
+    <string name="app_name"><b>Other Order (Beta)</b></string>
     <!-- string name="hello_world">Hello World!</string -->
     <string name="menu_debug">Debug</string>
     <string name="menu_about">About</string>
@@ -22,7 +22,7 @@
     <string name="play_button">Écouter</string>
     <string name="stop_button">Arrêter</string>
     <string name="go_text"><b>How treelike we are,\nHow human the tree</b>\n\nGretel Ehrlich, \"River History\", 1998</string>
-    <string name="version">v2.1b</string>
+    <string name="version">v2.3b</string>
     <string name="outide_map">L\'enregistrement est uniquement possible dans la ville de Montpellier.</string>
     <string name="searching">Acquiring GPS Lock...</string>
     <string name="gps_disabled">GPS Receiver Disabled</string>

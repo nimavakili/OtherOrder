@@ -1,30 +1,34 @@
 package com.minimv.soundwalker;
 
 import java.io.File;
+import java.io.IOException;
 //import java.text.SimpleDateFormat;
 //import java.util.Date;
-import java.util.Locale;
+//import java.util.Locale;
 import java.util.Timer;
 import java.util.TimerTask;
+
 import com.minimv.soundwalker.R;
+
 import android.app.Notification;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
+//import android.content.res.AssetFileDescriptor;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
 import android.media.AudioManager;
 import android.os.Binder;
 import android.os.Bundle;
-import android.os.Environment;
+//import android.os.Environment;
 import android.os.IBinder;
 import android.support.v4.app.NotificationCompat;
 import android.util.Log;
 //import android.view.Gravity;
-import android.widget.Toast;
+//import android.widget.Toast;
 
 public class GPSService extends Service implements LocationListener {
 
@@ -199,8 +203,9 @@ public class GPSService extends Service implements LocationListener {
 		//if (!gotLock && !GPSDisabled)
 			//GPSActivity.searching.setVisibility(View.VISIBLE);
 
-		if (!isTracking())
+		if (!isTracking() && node == null) {
 			loadMp3();
+		}
 	}
 	
 	@Override
@@ -248,7 +253,9 @@ public class GPSService extends Service implements LocationListener {
 	public void startTracking() {
 		Log.v(TAG, "startTracking");
 
-		loadMp3();
+		if (node == null) {
+			loadMp3();
+		}
 		startForeground(1366, mBuilder.build());
 		isTracking = true;
 		//linesCt = 0;
@@ -290,7 +297,7 @@ public class GPSService extends Service implements LocationListener {
 	}
 
 	private void loadMp3() {
-		if (!Environment.getExternalStorageState().equals(Environment.MEDIA_MOUNTED)) {
+		/*if (!Environment.getExternalStorageState().equals(Environment.MEDIA_MOUNTED)) {
 			Toast.makeText(getApplicationContext(), getResources().getString(R.string.no_sd), Toast.LENGTH_LONG).show();
 			return;
 		}
@@ -326,6 +333,7 @@ public class GPSService extends Service implements LocationListener {
 		int error = 0;
 		for (int i = 0; i < fileCount; i++) {
 			if (allFiles[i].endsWith(".mp3")) {
+				AssetFileDescriptor afd = getAssets().openFd(allFiles[i]);
 				node[nodeCount] = new NodeManager(this, allFiles[i]);
 				if (node[nodeCount].invalid)
 					error++;
@@ -338,6 +346,33 @@ public class GPSService extends Service implements LocationListener {
 		}
 		else if (error > 0) {
 			//Toast.makeText(getApplicationContext(), getResources().getString(R.string.invalid_format), Toast.LENGTH_LONG).show();
+		}*/
+		
+		String[] allFiles = new String[0];
+		try {
+			allFiles = getAssets().list("nodes");
+			//for(String name : allFiles) {
+			    //Log.v("NodePath", "nodes/" + name);
+			//}
+			int fileCount = allFiles.length;
+			node = new NodeManager[fileCount];
+			NodeManager.mContext = this;
+			NodeManager.lastPositions = getSharedPreferences("LAST_POSITIONS", 0);
+			NodeManager.positionEditor = NodeManager.lastPositions.edit();
+			nodeCount = 0;
+			int error = 0;
+			for (int i = 0; i < fileCount; i++) {
+				if (allFiles[i].endsWith(".mp3")) {
+					node[nodeCount] = new NodeManager(allFiles[i]);
+					if (node[nodeCount].invalid)
+						error++;
+					nodeCount++;
+				}
+			}
+			sendMessage(messageAll, nodeCount - error);
+		}
+		catch (IOException e) {
+			e.printStackTrace();
 		}
 	}
 	
@@ -674,7 +709,7 @@ public class GPSService extends Service implements LocationListener {
 		node[3].play();
 	}
 */
-	private void stopAllNodes() {
+	public void stopAllNodes() {
 		audioManager.abandonAudioFocus(onAudioFocusChange);
 		hasAudioFocus = false;
 		for (int i = 0; i < nodeCount; i++) {

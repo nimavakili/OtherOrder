@@ -11,6 +11,7 @@
         android:title="@string/menu_debug"
         android:checkable="true"
         android:checked="false"
+        android:enabled="false"
         android:onClick="onDebug" />
 
     <item

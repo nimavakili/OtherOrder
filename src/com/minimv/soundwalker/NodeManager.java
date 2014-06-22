@@ -6,28 +6,27 @@ import java.util.TimerTask;
 
 import com.bugsense.trace.BugSenseHandler;
 
-
-
 //import com.minimv.soundwalker.R;
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.content.res.AssetFileDescriptor;
 import android.location.Location;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
-import android.util.Log;
+//import android.util.Log;
 import android.widget.Toast;
 
 public class NodeManager {
 
 	private MediaPlayer mPlayer;
-	private Context mContext;
+	public static Context mContext;
 	private String path = "";
 	private double lat = 0;
 	private double lon = 0;
 	private double radO = 0;
 	private double radI = 0;
-	private static SharedPreferences lastPositions;
-	private static SharedPreferences.Editor positionEditor;
+	public static SharedPreferences lastPositions;
+	public static SharedPreferences.Editor positionEditor;
 	public boolean invalid = false;
     private Timer timer;
     private TimerTask timerTask;
@@ -35,12 +34,14 @@ public class NodeManager {
 	private final int maxVolume = 100;
 	private final int fadeFactor = 50;
 	
-	public NodeManager(Context context, String p) {
+	public NodeManager(String p) {
 // TODO: Error handling
 		try {
-			mContext = context;
-			path = GPSService.sdFolder.getAbsolutePath() + "/" + p;
-			String[] split = p.replace(".mp3", "").replace("._", "").split(",");
+			//mContext = context;
+			//path = GPSService.sdFolder.getAbsolutePath() + "/" + p;
+			path = "nodes/" + p;
+			//String[] split = p.replace(".mp3", "").replace("._", "").split(",");
+			String[] split = p.replace(".mp3", "").split(",");
 			lat = Double.parseDouble(split[0].trim());
 			lon = Double.parseDouble(split[1].trim());
 			if (split.length < 4) {
@@ -52,12 +53,12 @@ public class NodeManager {
 				radO = Math.max(Math.abs(Double.parseDouble(split[2].trim())), Math.abs(Double.parseDouble(split[3].trim())));
 			}
 			//Log.v("FILES", "Lat: " + lat + ", Lon: " + lon + ", RadO: " + radO + ", RadI: " + radI);
-			lastPositions = mContext.getSharedPreferences("LAST_POSITIONS", 0);
-			positionEditor = lastPositions.edit();
+			//lastPositions = mContext.getSharedPreferences("LAST_POSITIONS", 0);
+			//positionEditor = lastPositions.edit();
 		}
 		catch (Exception e) {
 			invalid = true;
-			Toast.makeText(context.getApplicationContext(), "Invalid MP3 name format!\n" + p + context.getResources().getString(R.string.invalid_format), Toast.LENGTH_LONG).show();
+			Toast.makeText(mContext.getApplicationContext(), "Invalid MP3 name format!\n" + p + mContext.getResources().getString(R.string.invalid_format), Toast.LENGTH_LONG).show();
 			e.printStackTrace();
 	        BugSenseHandler.sendException(e);
 		}
@@ -103,8 +104,9 @@ public class NodeManager {
 		//Uri uri = Uri.parse("android.resource://com.minimv.soundwalker/raw/" + idStr);
 		mPlayer = new MediaPlayer();
 		try {
-			Log.v("MP3", path);
-			mPlayer.setDataSource(path);
+			//Log.v("MP3", path);
+			AssetFileDescriptor afd = mContext.getAssets().openFd(path);
+			mPlayer.setDataSource(afd.getFileDescriptor(), afd.getStartOffset(), afd.getLength());
 		} catch (IllegalArgumentException e1) {
 			e1.printStackTrace();
 		} catch (SecurityException e1) {
@@ -211,7 +213,9 @@ public class NodeManager {
 	}
 	
 	public static void reset() {
-		positionEditor.clear();
-		positionEditor.commit();
+		if (positionEditor != null) {
+			positionEditor.clear();
+			positionEditor.commit();
+		}
 	}
 }

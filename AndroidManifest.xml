@@ -2,7 +2,7 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.minimv.soundwalker"
     android:versionCode="1"
-    android:versionName="2.3b" >
+    android:versionName="2.4b" >
 
     <uses-sdk
         android:minSdkVersion="14"

@@ -1,10 +1,10 @@
 package com.minimv.soundwalker;
 
 import java.io.File;
-import java.io.IOException;
+//import java.io.IOException;
 //import java.text.SimpleDateFormat;
 //import java.util.Date;
-//import java.util.Locale;
+import java.util.Locale;
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -23,12 +23,12 @@ import android.location.LocationManager;
 import android.media.AudioManager;
 import android.os.Binder;
 import android.os.Bundle;
-//import android.os.Environment;
+import android.os.Environment;
 import android.os.IBinder;
 import android.support.v4.app.NotificationCompat;
 import android.util.Log;
 //import android.view.Gravity;
-//import android.widget.Toast;
+import android.widget.Toast;
 
 public class GPSService extends Service implements LocationListener {
 
@@ -82,7 +82,11 @@ public class GPSService extends Service implements LocationListener {
     private boolean hasAudioFocus = false;
     public static File sdFolder;
     public boolean noKill = false;
-    private double preLat = 0, preLon = 0, preAcc = -1;
+    private double[] lats = {0, 0, 0, 0, 0, 0};
+    private double[] lons = {0, 0, 0, 0, 0, 0};
+    private double[] accs = {-1, -1, -1, -1, -1, -1};
+    private int curIndex = 0;
+    //private double preLat = 0, preLon = 0, preAcc = -1;
     
 	@Override
 	public void onCreate() {
@@ -297,7 +301,7 @@ public class GPSService extends Service implements LocationListener {
 	}
 
 	private void loadMp3() {
-		/*if (!Environment.getExternalStorageState().equals(Environment.MEDIA_MOUNTED)) {
+		if (!Environment.getExternalStorageState().equals(Environment.MEDIA_MOUNTED)) {
 			Toast.makeText(getApplicationContext(), getResources().getString(R.string.no_sd), Toast.LENGTH_LONG).show();
 			return;
 		}
@@ -329,12 +333,14 @@ public class GPSService extends Service implements LocationListener {
 		//Log.v("FILES", "Audio files count: " + audioFiles.length);
 		int fileCount = allFiles.length;
 		node = new NodeManager[fileCount];
+		NodeManager.mContext = this;
+		NodeManager.lastPositions = getSharedPreferences("LAST_POSITIONS", 0);
+		NodeManager.positionEditor = NodeManager.lastPositions.edit();
 		nodeCount = 0;
 		int error = 0;
 		for (int i = 0; i < fileCount; i++) {
 			if (allFiles[i].endsWith(".mp3")) {
-				AssetFileDescriptor afd = getAssets().openFd(allFiles[i]);
-				node[nodeCount] = new NodeManager(this, allFiles[i]);
+				node[nodeCount] = new NodeManager(allFiles[i]);
 				if (node[nodeCount].invalid)
 					error++;
 				nodeCount++;
@@ -346,9 +352,9 @@ public class GPSService extends Service implements LocationListener {
 		}
 		else if (error > 0) {
 			//Toast.makeText(getApplicationContext(), getResources().getString(R.string.invalid_format), Toast.LENGTH_LONG).show();
-		}*/
+		}
 		
-		String[] allFiles = new String[0];
+		/*String[] allFiles = new String[0];
 		try {
 			allFiles = getAssets().list("nodes");
 			//for(String name : allFiles) {
@@ -373,7 +379,7 @@ public class GPSService extends Service implements LocationListener {
 		}
 		catch (IOException e) {
 			e.printStackTrace();
-		}
+		}*/
 	}
 	
 	public void onLocationChanged(Location location) {
@@ -397,25 +403,55 @@ public class GPSService extends Service implements LocationListener {
 		
 		//String stamp = date.format(new Date());
 		//String comm = ",";
-		double acc = location.getAccuracy();
-		double weight = 1/Math.max(acc, 1);
-		double preWeight = 1/Math.max(preAcc, 1);
-		if (preAcc == -1);
-			preWeight = 0;
+
+		//double weight = 1/Math.max(acc, 1);
+		//double preWeight = 1/Math.max(preAcc, 1);
+		//if (preAcc == -1);
+			//preWeight = 0;
 		
+		double acc = location.getAccuracy();
 		double lat = location.getLatitude();
 		double lon = location.getLongitude();
+		
+		if (curIndex > lats.length - 1) {
+			curIndex = 0;
+		}
+		lats[curIndex] = lat;
+		lons[curIndex] = lon;
+		accs[curIndex] = acc;
+		curIndex++;
 		
 		// TODO
 		//lat += 42.295670 - 50.976125;
 		//lon += -71.112375 - 11.339915;
 
-		lat = (lat*weight + preLat*preWeight)/(weight + preWeight);
-		lon = (lon*weight + preLon*preWeight)/(weight + preWeight);
+		double latsTotal = 0;
+		double lonsTotal = 0;
+		double weightsTotal = 0;
+		for (int i = 0; i < lats.length; i++) {
+			double weight = 1/Math.max(accs[i], 1);
+			if (accs[i] == -1) {
+				weight = 0;
+			}
+			weightsTotal += weight;
+			latsTotal += lats[i]*weight;
+			lonsTotal += lons[i]*weight;
+			//double preWeight = 1/Math.max(preAcc, 1);
+		}
+		//lat = (lat*weight + preLat*preWeight)/(weight + preWeight);
+		//lon = (lon*weight + preLon*preWeight)/(weight + preWeight);
+
+		float[] results = new float[3];
+		Location.distanceBetween(lat, lon, latsTotal/weightsTotal, lonsTotal/weightsTotal, results);
+		//Log.v(TAG, "Smoothing Delta: " + results[0]);
+
+		lat = latsTotal/weightsTotal;
+		lon = lonsTotal/weightsTotal;
+		acc += results[0];
 		
-		preAcc = acc;
-		preLat = lat;
-		preLon = lon;
+		//preAcc = acc;
+		//preLat = lat;
+		//preLon = lon;
 		//double acc = location.getAccuracy();
 		//double lat = (location.getLatitude()*acc + preLat*preAcc)/(acc + preAcc);
 		//double lon = location.getLongitude();
@@ -451,7 +487,8 @@ public class GPSService extends Service implements LocationListener {
 					}
 					else {
 						if (node[i].isPlaying())
-							node[i].stop();
+							//node[i].stop();
+							node[i].setVolume(0);
 					}
 				}
 				else
@@ -716,6 +753,7 @@ public class GPSService extends Service implements LocationListener {
 			if (!node[i].invalid) {
 				if (node[i].isPlaying()) {
 					node[i].stop();
+					//node[i].setVolume(0);
 				}
 			}
 		}

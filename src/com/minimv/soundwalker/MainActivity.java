@@ -12,6 +12,7 @@ import com.actionbarsherlock.internal.app.ActionBarWrapper;
 import com.actionbarsherlock.view.Menu;
 import com.actionbarsherlock.view.MenuItem;
 
+import android.animation.ObjectAnimator;
 import android.app.AlertDialog;
 import android.content.BroadcastReceiver;
 import android.content.ComponentName;
@@ -43,6 +44,7 @@ import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.ToggleButton;
+
 
 
 //import com.google.android.gms.maps.CameraUpdate;
@@ -247,7 +249,7 @@ public class MainActivity extends SherlockFragmentActivity
 				if (mainFragment != null) {
 					mainFragment.lattitude.setText(lat.substring(0, Math.min(10, lat.length())));
 	            	mainFragment.longitude.setText(lon.substring(0, Math.min(10, lon.length())));
-	            	mainFragment.accuracy.setText(acc);
+	            	mainFragment.accuracy.setText(acc.substring(0, Math.min(10, acc.length())));
 				}
             	//mapFragment.updateLocation(42.296335, -71.121215, 0);
             	if (mapFragment != null)
@@ -260,9 +262,9 @@ public class MainActivity extends SherlockFragmentActivity
 					mainFragment.active.setText(act);
 				}
         		if (mapFragment != null) {
-        			if (mapFragment.debug) {
-        				mapFragment.updateNodes();
-        			}
+        			//if (mapFragment.debug) {
+        				mapFragment.updateNodes(!mapFragment.debug);
+        			//}
         		}
             }
             if (messageAll != -1000) {
@@ -627,6 +629,7 @@ public class MainActivity extends SherlockFragmentActivity
     	private Circle[] circleI;
     	private Marker[] marker;
     	private Marker locationMarker;
+    	private ObjectAnimator anim;
     	//private NodeManager node[];
     	/*private final GoogleMap.OnCameraChangeListener zoomListener = new GoogleMap.OnCameraChangeListener() {
 			@Override
@@ -769,7 +772,7 @@ public class MainActivity extends SherlockFragmentActivity
     	public void onStop() {
     		super.onStop();
     		// TODO memory management, both of these are causing problems
-    		removeNodes();
+    		removeNodes(false);
     		//mMap = null;
     	}
 
@@ -805,12 +808,16 @@ public class MainActivity extends SherlockFragmentActivity
                     //mMap.setLocationSource(null);
             		locationMarker = mMap.addMarker((new MarkerOptions())
             				.position(new LatLng(0, 0))
-            				.alpha(0.75f)
         					.icon(BitmapDescriptorFactory.fromResource(R.drawable.location_marker))
         					.anchor(0.5f, 0.5f)
         					.visible(false)
         			);
-	            	mMap.setOnCameraChangeListener(new GoogleMap.OnCameraChangeListener() {
+            		anim = ObjectAnimator.ofFloat(locationMarker, "alpha", 0.2f, 1f);
+            		anim.setDuration(1000);
+            		anim.setRepeatCount(ObjectAnimator.INFINITE);
+            		anim.setRepeatMode(ObjectAnimator.REVERSE);
+            		//anim.start();
+            		mMap.setOnCameraChangeListener(new GoogleMap.OnCameraChangeListener() {
 	        			@Override
 	        			public void onCameraChange(CameraPosition cPos) {
 	        				if (!dontListen) {
@@ -831,6 +838,7 @@ public class MainActivity extends SherlockFragmentActivity
 	        	locationMarker.setPosition(latlng);
 	        	if (!locationMarker.isVisible()) {
 	        		locationMarker.setVisible(true);
+            		anim.start();
 	        	}
         		if (!mMap.isMyLocationEnabled() && !isZooming() && arnoldMap.isVisible() && !dontListen) {
     	        	//int px = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 5, getResources().getDisplayMetrics());
@@ -1009,6 +1017,7 @@ public class MainActivity extends SherlockFragmentActivity
         public void noLock() {
         	if (locationMarker != null) {
         		if (locationMarker.isVisible()) {
+        			anim.end();
         			locationMarker.setVisible(false);
         			//fitCamera();
         		}
@@ -1039,10 +1048,11 @@ public class MainActivity extends SherlockFragmentActivity
                 	//zoomIn.setAlpha(1);
                 }
                 //addNodes();
-        		updateNodes();
+        		updateNodes(false);
             }
             else {
-                removeNodes();
+                removeNodes(true);
+        		updateNodes(true);
                 if (mMap.getMapType() != GoogleMap.MAP_TYPE_NONE)
                 	mMap.setMapType(GoogleMap.MAP_TYPE_NONE);
             	arnoldMap.setVisible(false);
@@ -1154,13 +1164,46 @@ public class MainActivity extends SherlockFragmentActivity
 			});
         }
         
-        public void addNodes() {
-        	if (debug && gpsService.node != null && marker == null) {
+        public void addNodes(boolean I) {
+        	//if (debug && gpsService.node != null && marker == null) {
+        	if (gpsService.node != null) {
         		NodeManager node[] = gpsService.node;
-        		circleO = new Circle[node.length];
-        		circleI = new Circle[node.length];
-        		marker = new Marker[node.length];
-        		for (int i = 0; i < node.length; i++) {
+        		if (marker == null) {
+        			circleO = new Circle[node.length];
+        			marker = new Marker[node.length];
+            		for (int i = 0; i < node.length; i++) {
+            			LatLng latlon = new LatLng(node[i].getLat(), node[i].getLon());
+            			circleO[i] = mMap.addCircle((new CircleOptions())
+            					.center(latlon)
+            					.radius(node[i].getRadO())
+            					.strokeWidth(5)
+            					.strokeColor(Color.argb(127, 0, 0, 0))
+            					.zIndex(2)
+            			);
+            			marker[i] = mMap.addMarker((new MarkerOptions())
+            					.position(latlon)
+            					.icon(BitmapDescriptorFactory.fromResource(R.drawable.map_marker))
+            					.anchor(0.5f, 0.5f)
+            			);
+            		}
+        		}
+        		if (!I && circleI == null) {
+        			//Log.v("MAP", "HERE");
+        			circleI = new Circle[node.length];
+            		for (int i = 0; i < node.length; i++) {
+            			LatLng latlon = new LatLng(node[i].getLat(), node[i].getLon());
+            			if (node[i].getRadI() > 0) {
+            				circleI[i] = mMap.addCircle((new CircleOptions())
+    	        					.center(latlon)
+    	        					.radius(node[i].getRadI())
+    	        					.strokeWidth(2)
+    	        					.strokeColor(Color.argb(63, 0, 0, 0))
+    	        					.zIndex(1)
+    	        			);
+            			}
+            		}
+        		}
+        		/*for (int i = 0; i < node.length; i++) {
         			LatLng latlon = new LatLng(node[i].getLat(), node[i].getLon());
         			circleO[i] = mMap.addCircle((new CircleOptions())
         					.center(latlon)
@@ -1169,7 +1212,7 @@ public class MainActivity extends SherlockFragmentActivity
         					.strokeColor(Color.argb(127, 0, 0, 0))
         					.zIndex(2)
         			);
-        			if (node[i].getRadI() > 0) {
+        			if (node[i].getRadI() > 0 && I) {
         				circleI[i] = mMap.addCircle((new CircleOptions())
 	        					.center(latlon)
 	        					.radius(node[i].getRadI())
@@ -1183,47 +1226,57 @@ public class MainActivity extends SherlockFragmentActivity
         					.icon(BitmapDescriptorFactory.fromResource(R.drawable.map_marker))
         					.anchor(0.5f, 0.5f)
         			);
-        		}
+        		}*/
         	}
         }
 
-        public void removeNodes() {
+        public void removeNodes(boolean I) {
         	if (marker != null) {
 	    		for (int i = 0; i < marker.length; i++) {
-					circleO[i].remove();
-					if (circleI[i] != null)
-						circleI[i].remove();
-					marker[i].remove();
+	    			if (!I) {
+	    				circleO[i].remove();
+						marker[i].remove();
+	    			}
+	    			if (circleI != null) {
+		    			if (circleI[i] != null)
+							circleI[i].remove();
+	    			}
 	    		}
         	}
-        	circleO = null;
+			if (!I) {
+				circleO = null;
+				marker = null;
+			}
         	circleI = null;
-        	marker = null;
         }
         
-        public void updateNodes() {
-        	if (debug && gpsService.node != null) {
+        public void updateNodes(boolean I) {
+        	//if (debug && gpsService.node != null) {
+            if (gpsService.node != null) {
         		NodeManager node[] = gpsService.node;
-        		if (marker == null) {
-        			addNodes();
+        		//if (marker == null || (!I && circleI == null)) {
+        			//addNodes(I);
         			//return;
+        		//}
+        		if (marker != null) {
+	        		if (node.length != marker.length) {
+		        		removeNodes(false);
+		        		//addNodes(I);
+		        	}
         		}
-        		else if (node.length != marker.length) {
-	        		removeNodes();
-	        		addNodes();
-	        	}
-	        	int color, colorS;
+        		addNodes(I);
+	        	int color;//, colorS;
 				int colorI = getResources().getColor(R.color.holo_blue_bright);
 				int colorA = getResources().getColor(R.color.holo_red_bright);
 	    		for (int i = 0; i < node.length; i++) {
 	            	LatLng latlon = new LatLng(node[i].getLat(), node[i].getLon());
 	    			if (node[i].isPlaying()) {
 	    				color = Color.argb(63, Color.red(colorA), Color.green(colorA), Color.blue(colorA));
-	    				colorS = Color.argb(127, Color.red(colorA), Color.green(colorA), Color.blue(colorA));
+	    				//colorS = Color.argb(127, Color.red(colorA), Color.green(colorA), Color.blue(colorA));
 	    			}
 	    			else {
 	    				color = Color.argb(63, Color.red(colorI), Color.green(colorI), Color.blue(colorI));
-	    				colorS = Color.argb(127, Color.red(colorI), Color.green(colorI), Color.blue(colorI));
+	    				//colorS = Color.argb(127, Color.red(colorI), Color.green(colorI), Color.blue(colorI));
 	    			}
 	    			if (!circleO[i].isVisible())
 	    				circleO[i].setVisible(true);
@@ -1231,21 +1284,23 @@ public class MainActivity extends SherlockFragmentActivity
 	    				circleO[i].setCenter(latlon);
 	    			if (circleO[i].getRadius() != node[i].getRadO())
 	    				circleO[i].setRadius(node[i].getRadO());
-	            	if (circleI[i] != null) {
-	        			if (circleO[i].getFillColor() != color)
-	        				circleO[i].setFillColor(color);
-		    			if (!circleI[i].isVisible())
-		    				circleI[i].setVisible(true);
-		    			if (circleI[i].getCenter().latitude != latlon.latitude || circleI[i].getCenter().longitude != latlon.longitude)
-	        				circleI[i].setCenter(latlon);
-	        			if (circleI[i].getRadius() != node[i].getRadI())
-	        				circleI[i].setRadius(node[i].getRadI());
-	        			if (circleI[i].getFillColor() != color)
-	        				circleI[i].setFillColor(color);
-	            	}
-	    			else {
-	        			if (circleO[i].getFillColor() != colorS)
-	        				circleO[i].setFillColor(colorS);
+        			if (circleO[i].getFillColor() != color)
+        				circleO[i].setFillColor(color);
+	    			if (circleI != null) {
+		            	if (circleI[i] != null) {
+			    			if (!circleI[i].isVisible())
+			    				circleI[i].setVisible(true);
+			    			if (circleI[i].getCenter().latitude != latlon.latitude || circleI[i].getCenter().longitude != latlon.longitude)
+		        				circleI[i].setCenter(latlon);
+		        			if (circleI[i].getRadius() != node[i].getRadI())
+		        				circleI[i].setRadius(node[i].getRadI());
+		        			if (circleI[i].getFillColor() != color)
+		        				circleI[i].setFillColor(color);
+		            	}
+		    			//else {
+		        			//if (circleO[i].getFillColor() != colorS)
+		        				//circleO[i].setFillColor(colorS);
+		    			//}
 	    			}
 	    			if (!marker[i].isVisible())
 	    				marker[i].setVisible(true);

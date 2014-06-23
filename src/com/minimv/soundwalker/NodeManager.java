@@ -9,7 +9,7 @@ import com.bugsense.trace.BugSenseHandler;
 //import com.minimv.soundwalker.R;
 import android.content.Context;
 import android.content.SharedPreferences;
-import android.content.res.AssetFileDescriptor;
+//import android.content.res.AssetFileDescriptor;
 import android.location.Location;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
@@ -38,10 +38,10 @@ public class NodeManager {
 // TODO: Error handling
 		try {
 			//mContext = context;
-			//path = GPSService.sdFolder.getAbsolutePath() + "/" + p;
-			path = "nodes/" + p;
-			//String[] split = p.replace(".mp3", "").replace("._", "").split(",");
-			String[] split = p.replace(".mp3", "").split(",");
+			path = GPSService.sdFolder.getAbsolutePath() + "/" + p;
+			//path = "nodes/" + p;
+			String[] split = p.replace(".mp3", "").replace("._", "").split(",");
+			//String[] split = p.replace(".mp3", "").split(",");
 			lat = Double.parseDouble(split[0].trim());
 			lon = Double.parseDouble(split[1].trim());
 			if (split.length < 4) {
@@ -105,8 +105,9 @@ public class NodeManager {
 		mPlayer = new MediaPlayer();
 		try {
 			//Log.v("MP3", path);
-			AssetFileDescriptor afd = mContext.getAssets().openFd(path);
-			mPlayer.setDataSource(afd.getFileDescriptor(), afd.getStartOffset(), afd.getLength());
+			//AssetFileDescriptor afd = mContext.getAssets().openFd(path);
+			//mPlayer.setDataSource(afd.getFileDescriptor(), afd.getStartOffset(), afd.getLength());
+			mPlayer.setDataSource(path);
 		} catch (IllegalArgumentException e1) {
 			e1.printStackTrace();
 		} catch (SecurityException e1) {
@@ -152,8 +153,10 @@ public class NodeManager {
 		} catch (IllegalStateException e) {
 			e.printStackTrace();
 		}
-		timer.cancel();
-		timer.purge();
+		if (timer != null) {
+			timer.cancel();
+			timer.purge();
+		}
 		curVol = 0;
 	}
 
@@ -165,11 +168,6 @@ public class NodeManager {
 	}
 	
 	public float setVolume(double lat, double lon) {
-		if (timer != null) {
-			timer.cancel();
-			timer.purge();
-		}
-
         double dist = distanceTo(lat, lon);
 		if (radO == radI)
 			vol = maxVolume;
@@ -179,6 +177,17 @@ public class NodeManager {
 		}
 		
 		//Log.v("Volume", "" + vol);
+		setVolume(vol);
+		
+		return vol;
+	}
+	
+	public void setVolume(int volume) {
+		vol = volume;
+		if (timer != null) {
+			timer.cancel();
+			timer.purge();
+		}
 		
 		if (vol != curVol) {
 			timer = new Timer();
@@ -189,17 +198,18 @@ public class NodeManager {
 		        		curVol++;
 		        	else if (vol < curVol)
 		        		curVol--;
-		            updateVolume();
-		            if (vol == curVol) {
+		        	else if (vol == curVol) {
 		                timer.cancel();
 		                timer.purge();
+		            }
+		            updateVolume();
+		            if (curVol == 0) {
+		            	stop();
 		            }
 		        }
 		    };
 		    timer.schedule(timerTask, 0, fadeFactor);
 		}
-		
-		return vol;
 	}
 	
 	private void updateVolume() {

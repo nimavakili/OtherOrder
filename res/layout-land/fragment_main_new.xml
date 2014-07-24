@@ -37,7 +37,23 @@
 		    android:layout_height="wrap_content"
 		    android:layout_centerInParent="true"
 		    android:text="@string/app_name"
+		    android:visibility="invisible"
 		    android:textAppearance="@android:style/TextAppearance.Large" />
+
+	    <ToggleButton
+	        android:id="@+id/trackingButton"
+	        android:layout_width="wrap_content"
+	        android:layout_height="wrap_content"
+	        android:layout_centerInParent="true"
+	        android:background="@drawable/btn_toggle_nb"
+	        android:minHeight="56dp"
+	        android:minWidth="128dp"
+	        android:onClick="onTrackingToggled"
+	        android:text="@string/start_tracking"
+	        android:textOff="@string/start_tracking"
+	        android:textOn="@string/stop_tracking"
+	        android:textSize="@dimen/btn_size_medium" />
+
 		</RelativeLayout>
 
 		<RelativeLayout
@@ -215,19 +231,20 @@
         android:gravity="center_vertical" >
 	
 	    <ToggleButton
-	        android:id="@+id/trackingButton"
+	        android:id="@+id/introButton"
 	        android:layout_width="wrap_content"
 	        android:layout_height="wrap_content"
 	        android:layout_centerHorizontal="true"
+	        android:background="@drawable/btn_toggle"
 	        android:gravity="center_vertical|center_horizontal"
 	        android:minHeight="56dp"
 	        android:minWidth="128dp"
-	        android:onClick="onTrackingToggled"
-	        android:text="@string/start_tracking"
-	        android:textOff="@string/start_tracking"
-	        android:textOn="@string/stop_tracking"
+	        android:onClick="onIntroToggled"
+	        android:text="@string/start_intro"
+	        android:textOff="@string/start_intro"
+	        android:textOn="@string/stop_intro"
 	        android:textSize="@dimen/btn_size" />
-
+		    
     </RelativeLayout>
 </LinearLayout>
 </LinearLayout>

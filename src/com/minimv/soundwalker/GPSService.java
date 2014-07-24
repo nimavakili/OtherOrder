@@ -41,7 +41,7 @@ public class GPSService extends Service implements LocationListener {
 	private boolean isTracking = false;
 	private boolean gotLock = false;
 	//private Location curLocation = null;
-	private boolean bound = false;
+	//private boolean bound = false;
 	//private BufferedWriter out;
 	//private SimpleDateFormat date = new SimpleDateFormat("yyyyMMddHHmmss", Locale.US);
 	//private String filename;
@@ -202,7 +202,7 @@ public class GPSService extends Service implements LocationListener {
 	@Override
 	public void onRebind(Intent intent) {
 		Log.v(TAG, "OnRebind");
-		bound = true;
+		//bound = true;
 		
 		//if (!gotLock && !GPSDisabled)
 			//GPSActivity.searching.setVisibility(View.VISIBLE);
@@ -215,7 +215,7 @@ public class GPSService extends Service implements LocationListener {
 	@Override
 	public boolean onUnbind(Intent intent) {
 		Log.v(TAG, "OnUnbind");
-		bound = false;
+		//bound = false;
 		if (!isTracking && !noKill) {
 			Log.v(TAG, "OnUnbind StopSelf");
 			locationManager.removeUpdates(this);
@@ -532,9 +532,9 @@ public class GPSService extends Service implements LocationListener {
 			}
 		}*/
 		
-		if (bound) {
+		//if (bound) {
 			//updateMap(location.getLatitude(), location.getLongitude());
-		}
+		//}
 	}
 	
 	private class LockCheck extends TimerTask {

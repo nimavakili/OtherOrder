@@ -21,8 +21,11 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.ServiceConnection;
+import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.graphics.Point;
+import android.media.AudioManager;
+import android.media.MediaPlayer;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
@@ -44,9 +47,6 @@ import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.ToggleButton;
-
-
-
 //import com.google.android.gms.maps.CameraUpdate;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
@@ -78,8 +78,13 @@ public class MainActivity extends SherlockFragmentActivity
     //public static int MAIN_FRAGMENT_INDEX = 0;
     //public static int MAP_FRAGMENT_INDEX = 1;
     //public static int ABOUT_FRAGMENT_INDEX = 2;
+	private static SharedPreferences prefs;
+	private MediaPlayer mPlayer;
+	private static TextView mapStatus;
+	private static int isInside = -1;
+	private static int curPage = 1;
 
-    private Context mContext;
+    private static Context mContext;
 	private final String TAG = "MainActiviy";
 	private static GPSService gpsService;
 	private final ServiceConnection gpsServiceConnection = new ServiceConnection() {
@@ -208,6 +213,7 @@ public class MainActivity extends SherlockFragmentActivity
 	};*/
 	private final Handler handler = new Handler();
 	private AlertDialog GPSAlert;
+	private static AlertDialog trackingDialog;
 	private Intent gpsIntent;
 	private final BroadcastReceiver receiver = new BroadcastReceiver() {
         @Override
@@ -282,6 +288,7 @@ public class MainActivity extends SherlockFragmentActivity
 		mContext = this;
 		BugSenseHandler.initAndStartSession(this, "41c5041a");
 		setContentView(R.layout.activity_main);
+		mapStatus = (TextView) findViewById(R.id.mapStatus);
         mAppSectionsPagerAdapter = new AppSectionsPagerAdapter(getSupportFragmentManager());
         final ActionBar actionBar = getSupportActionBar();
         //TODO: pre-ICS
@@ -312,6 +319,18 @@ public class MainActivity extends SherlockFragmentActivity
             @Override
             public void onPageSelected(int position) {
                 actionBar.setSelectedNavigationItem(position);
+                curPage = position;
+                //boolean dbg = false;
+                //if (mapFragment != null) {
+                //	dbg = mapFragment.debug;
+                //}
+                //if (position == 2 && !isInside && mapStatus.getVisibility() == View.INVISIBLE && !dbg) {
+                //	mapStatus.setVisibility(View.VISIBLE);
+                //}
+                //else {
+                if (position != 2) {
+                	mapStatus.setVisibility(View.INVISIBLE);
+                }
             }
         });
         mViewPager.setOffscreenPageLimit(2);
@@ -324,18 +343,19 @@ public class MainActivity extends SherlockFragmentActivity
         
         //This has to be after adding tabs to get rid of auto change to list mode
         actionBar.setNavigationMode(ActionBar.NAVIGATION_MODE_TABS);
-        //mViewPager.setCurrentItem(2);
+        mViewPager.setCurrentItem(1);
 
         gpsIntent = new Intent(getApplicationContext(), GPSService.class);
 		if (savedInstanceState != null) {
 			wasChangingConfigurations = savedInstanceState.getBoolean("wasChangingConfigurations", false);
 		}
 	    //previousInstance = savedInstanceState;
+		prefs = getSharedPreferences("FIRST_RUN", 0);
 	}
 	
 	@Override
 	protected void onStart() {
-		super.onStart();		
+		super.onStart();
 		//wasChangingConfigurations = false;
 		//if (previousInstance != null) {
 			//wasChangingConfigurations = previousInstance.getBoolean("wasChangingConfigurations", false);
@@ -350,7 +370,9 @@ public class MainActivity extends SherlockFragmentActivity
 		registerReceiver(receiver, new IntentFilter(GPSService.messageAction));
 		startService(gpsIntent);
 		bindService(gpsIntent, gpsServiceConnection, Context.BIND_AUTO_CREATE);
-		
+		if (prefs.getBoolean("firstRun", true)) {
+			playIntro(true);
+        }
 		setTabsWidth();
 	}
 
@@ -408,6 +430,7 @@ public class MainActivity extends SherlockFragmentActivity
     public void onDestroy() {
     	super.onDestroy();
     	BugSenseHandler.closeSession(this);
+    	//playIntro(false);
     }
 
     public static class AppSectionsPagerAdapter extends FragmentPagerAdapter {
@@ -420,7 +443,7 @@ public class MainActivity extends SherlockFragmentActivity
         public Fragment getItem(int i) {
         	//Log.v(TAG, "AppSectionsPagerAdapter getItem");
             switch (i) {
-                case 0:
+                case 1:
                 	mainFragment = new MainSectionFragment();
                     Bundle mainArgs = new Bundle();
                     if (gpsService != null)
@@ -428,7 +451,7 @@ public class MainActivity extends SherlockFragmentActivity
                     else
                     	mainArgs.putBoolean("tb", false);
                     return mainFragment;
-                case 1:
+                case 2:
                 	mapFragment = new MapSectionFragment();
                     //Bundle mapArgs = new Bundle();
                     //if (gpsService != null)
@@ -437,7 +460,7 @@ public class MainActivity extends SherlockFragmentActivity
                     //	mapArgs.putBoolean("tb", false);
                     //mapF.setArguments(mapArgs);
                     return mapFragment;
-                case 2:
+                case 0:
                 	return new AboutFragment();
                 default:
                     Fragment fragment = new DummySectionFragment();
@@ -450,18 +473,20 @@ public class MainActivity extends SherlockFragmentActivity
 
         @Override
         public int getCount() {
-            return 3;
+            return 4;
         }
 
         @Override
         public CharSequence getPageTitle(int i) {
             switch (i) {
-            case 0:
-                return "Tracking";
             case 1:
-            	return "Map";
+                return "Main";
             case 2:
+            	return "Map";
+            case 0:
             	return "About";
+            case 3:
+            	return "Index";
             default:
             	return "Section " + (i + 1);
             }
@@ -479,11 +504,11 @@ public class MainActivity extends SherlockFragmentActivity
         @Override
         public Object instantiateItem(ViewGroup container, int i) {
             switch (i) {
-            case 0:
-                mainFragment = (MainSectionFragment) super.instantiateItem(container, 0);
-                return mainFragment;
             case 1:
-                mapFragment = (MapSectionFragment) super.instantiateItem(container, 1);
+                mainFragment = (MainSectionFragment) super.instantiateItem(container, 1);
+                return mainFragment;
+            case 2:
+                mapFragment = (MapSectionFragment) super.instantiateItem(container, 2);
                 return mapFragment;
             default:
             	return super.instantiateItem(container, i);
@@ -495,7 +520,7 @@ public class MainActivity extends SherlockFragmentActivity
 
     	//public static Button bb; //, gb, ub, sb, stb;
     	//public static ToggleButton tb, rb, pb;
-    	public ToggleButton tb;
+    	public ToggleButton tb, ib;
     	//public static TextView tt, rt, gt, searching;
     	public TextView searching, accuracy, lattitude, longitude, active, all;
     	public RelativeLayout mainBg, stats;//about, parent, mapPins, help;
@@ -510,6 +535,10 @@ public class MainActivity extends SherlockFragmentActivity
     		//stb = (Button) findViewById(R.id.stopButton);
     		//pb = (ToggleButton) findViewById(R.id.playButton);
     		tb = (ToggleButton) rootView.findViewById(R.id.trackingButton);
+    		ib = (ToggleButton) rootView.findViewById(R.id.introButton);
+    		if (prefs.getBoolean("firstRun", true)) {
+    			ib.setChecked(true);
+    		}
     		/*try {
     			tb.setChecked(args.getBoolean("tb"));
     		}
@@ -579,9 +608,10 @@ public class MainActivity extends SherlockFragmentActivity
         public View onCreateView(LayoutInflater inflater, ViewGroup container,
                 Bundle savedInstanceState) {
             View rootView = inflater.inflate(R.layout.fragment_section_dummy, container, false);
-            Bundle args = getArguments();
-            ((TextView) rootView.findViewById(android.R.id.text1)).setText(
-                    getString(R.string.dummy_section_text, args.getInt(ARG_SECTION_NUMBER)));
+            //Bundle args = getArguments();
+            //((TextView) rootView.findViewById(android.R.id.text1)).setText(
+            //        getString(R.string.dummy_section_text, args.getInt(ARG_SECTION_NUMBER)));
+            ((TextView) rootView.findViewById(android.R.id.text1)).setText("List of Plants");
             return rootView;
         }
     }
@@ -724,6 +754,9 @@ public class MainActivity extends SherlockFragmentActivity
 		    	zoomIn = zIn.get(0);
 	    	}
 	    	
+	    	//TextView status = new TextView(mContext);
+	    	//((FrameLayout) rootView).addView(child);
+	    	
     		setRetainInstance(true);
             return rootView;
         }
@@ -856,46 +889,110 @@ public class MainActivity extends SherlockFragmentActivity
 		        	double S = arnoldArboretum.southwest.latitude;
 		        	double E = arnoldArboretum.northeast.longitude;
 		        	double W = arnoldArboretum.southwest.longitude;
-		        	double scrollX = 0;
-		        	double scrollY = 0;
-		        	//int pxX = 0;
-		        	//int pxY = 0;
-		        	if (cN > N) {
-		    			scrollY = (N - cN);
-		    		}
-		        	else if (cS < S) {
-		    			scrollY = (S - cS);
-		    		}
-		        	if (cE > E) {
-		    			scrollX = (E - cE);
-		    		}
-		        	else if (cW < W) {
-		    			scrollX = (W - cW);
-		    		}
-		        	lat += scrollY;
-		        	lon += scrollX;
-		            latlng = new LatLng(lat, lon);
-		        	//mMap.setOnCameraChangeListener(new GoogleMap.OnCameraChangeListener() {
-		           	//    @Override
-		           	//    public void onCameraChange(CameraPosition cPos) {
-		           	//        mMap.setOnCameraChangeListener(zoomListener);
-		           	//    }
-		           	//});
-		            //mMap.setOnCameraChangeListener(null);
-		            dontListen = true;
-		        	mMap.animateCamera(CameraUpdateFactory.newLatLng(latlng), 200, new GoogleMap.CancelableCallback() {
-						@Override
-						public void onFinish() {
-				            dontListen = false;
-						}
-						@Override
-						public void onCancel() {
-				            dontListen = false;
-							//Log.v("Map", "updateLocation cancelled!");
-						}
-					});
-		            //mMap.setOnCameraChangeListener(zoomListener);
-		    		//mMap.moveCamera(CameraUpdateFactory.scrollBy(scrollX, scrollY));
+		        	if (lat > N || lat < S || lon > E || lon < W) {
+		        		if (isInside == 1 && gpsService.isTracking()) {
+		        			AlertDialog.Builder builder = new AlertDialog.Builder(mContext);
+				            builder.setMessage(R.string.went_outide);
+				            builder.setCancelable(true);
+				            builder.setPositiveButton(R.string.stop_tracking, new DialogInterface.OnClickListener() {
+				                 public void onClick(DialogInterface dialog, int id) {
+				         			gpsService.stopTracking();
+				         			mainFragment.tb.setChecked(false);
+				                 }
+				            });
+				            builder.setNegativeButton(R.string.do_nothing, new DialogInterface.OnClickListener() {
+				            	public void onClick(DialogInterface dialog, int id) {
+				                	dialog.dismiss();
+				                }
+				            });
+		        			if (trackingDialog != null) {
+		        				if (!trackingDialog.isShowing()) {
+				        	        trackingDialog = builder.create();
+				        	        trackingDialog.show();
+		        				}
+		        			}
+		        			else {
+		        				trackingDialog = builder.create();
+		        				trackingDialog.show();
+		        			}
+		        		}
+		        		isInside = 0;
+		        		if (curPage == 2 && !debug) {
+		        			if (mapStatus.getVisibility() == View.INVISIBLE)
+		        				mapStatus.setVisibility(View.VISIBLE);
+		        		}
+		        	}
+		        	else {
+		        		if (isInside == 0 && !gpsService.isTracking()) {
+		        			AlertDialog.Builder builder = new AlertDialog.Builder(mContext);
+				            builder.setMessage(R.string.came_inside);
+				            builder.setCancelable(true);
+				            builder.setPositiveButton(R.string.start_tracking, new DialogInterface.OnClickListener() {
+				                 public void onClick(DialogInterface dialog, int id) {
+				         			gpsService.startTracking();
+				         			mainFragment.tb.setChecked(true);
+				                 }
+				            });
+				            builder.setNegativeButton(R.string.do_nothing, new DialogInterface.OnClickListener() {
+				            	public void onClick(DialogInterface dialog, int id) {
+				                	dialog.dismiss();
+				                }
+				            });
+		        			if (trackingDialog != null) {
+		        				if (!trackingDialog.isShowing()) {
+				        	        trackingDialog = builder.create();
+				        	        trackingDialog.show();
+		        				}
+		        			}
+		        			else {
+		        				trackingDialog = builder.create();
+		        				trackingDialog.show();
+		        			}
+		        		}
+			        	isInside = 1;
+		        		//if (mapStatus.getVisibility() == View.VISIBLE)
+		        		mapStatus.setVisibility(View.INVISIBLE);
+			        	double scrollX = 0;
+			        	double scrollY = 0;
+			        	//int pxX = 0;
+			        	//int pxY = 0;
+			        	if (cN > N) {
+			    			scrollY = (N - cN);
+			    		}
+			        	else if (cS < S) {
+			    			scrollY = (S - cS);
+			    		}
+			        	if (cE > E) {
+			    			scrollX = (E - cE);
+			    		}
+			        	else if (cW < W) {
+			    			scrollX = (W - cW);
+			    		}
+			        	lat += scrollY;
+			        	lon += scrollX;
+			            latlng = new LatLng(lat, lon);
+			        	//mMap.setOnCameraChangeListener(new GoogleMap.OnCameraChangeListener() {
+			           	//    @Override
+			           	//    public void onCameraChange(CameraPosition cPos) {
+			           	//        mMap.setOnCameraChangeListener(zoomListener);
+			           	//    }
+			           	//});
+			            //mMap.setOnCameraChangeListener(null);
+			            dontListen = true;
+			        	mMap.animateCamera(CameraUpdateFactory.newLatLng(latlng), 200, new GoogleMap.CancelableCallback() {
+							@Override
+							public void onFinish() {
+					            dontListen = false;
+							}
+							@Override
+							public void onCancel() {
+					            dontListen = false;
+								//Log.v("Map", "updateLocation cancelled!");
+							}
+						});
+			            //mMap.setOnCameraChangeListener(zoomListener);
+			    		//mMap.moveCamera(CameraUpdateFactory.scrollBy(scrollX, scrollY));
+		        	}
         		}
         	}
         }
@@ -911,7 +1008,8 @@ public class MainActivity extends SherlockFragmentActivity
 
         private void checkCamera(int duration) {
     		if (!mMap.isMyLocationEnabled()) {
-    			if (locationMarker.isVisible()) {
+    			//if (locationMarker.isVisible()) {
+    			if (isInside == 1) {
     				dontListen = false;
     				//Log.v("Map", "HERE");
     	        	if (!arnoldMap.isVisible()) {
@@ -1029,6 +1127,8 @@ public class MainActivity extends SherlockFragmentActivity
     		//Log.v("Map", "toggleDebug");
         	debug = dbg;
             if (debug) {
+            	//if (mapStatus.getVisibility() == View.VISIBLE)
+            		mapStatus.setVisibility(View.INVISIBLE);
             	//mMap.setOnCameraChangeListener(null);
             	//arnoldMap.setTransparency(0.5f);
             	//if (arnoldMap.isVisible()) {
@@ -1056,6 +1156,9 @@ public class MainActivity extends SherlockFragmentActivity
                 if (mMap.getMapType() != GoogleMap.MAP_TYPE_NONE)
                 	mMap.setMapType(GoogleMap.MAP_TYPE_NONE);
             	arnoldMap.setVisible(false);
+                if (curPage == 2 && isInside == 0 && mapStatus.getVisibility() == View.INVISIBLE) {
+                	mapStatus.setVisibility(View.VISIBLE);
+            	}
             	/*if (rootView.getWidth() == 0) {
             		dontListen = true;
             		mMap.animateCamera(CameraUpdateFactory.scrollBy(1, 0), 1, new GoogleMap.CancelableCallback() {
@@ -1075,12 +1178,13 @@ public class MainActivity extends SherlockFragmentActivity
             	//arnoldMap.setTransparency(0.0f);
             	if (mMap.isMyLocationEnabled())
             		mMap.setMyLocationEnabled(false);
-                mMap.getUiSettings().setAllGesturesEnabled(false);
+                //mMap.getUiSettings().setAllGesturesEnabled(false);
             	//if (!mMap.getUiSettings().isZoomControlsEnabled())
             		//mMap.getUiSettings().setZoomControlsEnabled(true);
-                //mMap.getUiSettings().setRotateGesturesEnabled(false);
+                mMap.getUiSettings().setRotateGesturesEnabled(false);
                 //mMap.getUiSettings().setScrollGesturesEnabled(false);
-                //mMap.getUiSettings().setTiltGesturesEnabled(false);
+                mMap.getUiSettings().setTiltGesturesEnabled(false);
+                //mMap.getUiSettings().setZoomGesturesEnabled(true);
             	if (mMap.getUiSettings().isMyLocationButtonEnabled())
             		mMap.getUiSettings().setMyLocationButtonEnabled(false);
             }
@@ -1176,14 +1280,15 @@ public class MainActivity extends SherlockFragmentActivity
             			circleO[i] = mMap.addCircle((new CircleOptions())
             					.center(latlon)
             					.radius(node[i].getRadO())
-            					.strokeWidth(5)
-            					.strokeColor(Color.argb(127, 0, 0, 0))
+            					.strokeWidth(3)
+            					.strokeColor(Color.argb(63, 0, 0, 0))
             					.zIndex(2)
             			);
             			marker[i] = mMap.addMarker((new MarkerOptions())
             					.position(latlon)
             					.icon(BitmapDescriptorFactory.fromResource(R.drawable.map_marker))
             					.anchor(0.5f, 0.5f)
+            					.visible(false)
             			);
             		}
         		}
@@ -1233,8 +1338,9 @@ public class MainActivity extends SherlockFragmentActivity
         public void removeNodes(boolean I) {
         	if (marker != null) {
 	    		for (int i = 0; i < marker.length; i++) {
-	    			if (!I) {
-	    				circleO[i].remove();
+	    			if (!I && circleO != null) {
+	    				if (circleO[i] != null)
+	    					circleO[i].remove();
 						marker[i].remove();
 	    			}
 	    			if (circleI != null) {
@@ -1302,8 +1408,8 @@ public class MainActivity extends SherlockFragmentActivity
 		        				//circleO[i].setFillColor(colorS);
 		    			//}
 	    			}
-	    			if (!marker[i].isVisible())
-	    				marker[i].setVisible(true);
+	    			//if (!marker[i].isVisible())
+	    				//marker[i].setVisible(true);
 	            	if (marker[i].getPosition().latitude != latlon.latitude || marker[i].getPosition().longitude != latlon.longitude)
 	            		marker[i].setPosition(latlon);
 	        	}
@@ -1325,7 +1431,75 @@ public class MainActivity extends SherlockFragmentActivity
 		}
 	}
 
-	//public void onAbout(MenuItem item) {
+    public void onIntroToggled(View view) {
+    	ToggleButton ib = (ToggleButton) view;
+		boolean on = ib.isChecked();
+
+		if (on) {
+			playIntro(true);
+			//isInside = 1;
+		}
+		else {
+			playIntro(false);
+			//isInside = 0;
+		}
+    }
+
+    private void playIntro(boolean play) {
+		// TODO AudioFocus/Volume/ConfigChange
+    	//AudioManager audio = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
+    	//int currentVolume = audio.getStreamVolume(AudioManager.STREAM_MUSIC);
+    	if (play) {
+        	if (mPlayer == null) {
+        		mPlayer = MediaPlayer.create(this, R.raw.intro);
+        		mPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
+        		mPlayer.setOnPreparedListener(new MediaPlayer.OnPreparedListener() {
+        	        public void onPrepared(MediaPlayer mp) {
+        	        	mPlayer.start();
+        				if (mainFragment != null) {
+        					if (!mainFragment.ib.isChecked()) {
+	        					mainFragment.ib.post(new Runnable() {
+	        						@Override
+	        						public void run() {
+	        							mainFragment.ib.setChecked(true);
+	        							//Log.v("TB", "setChecked");
+	        						}
+	        					});
+        					}
+        				}
+        	        }
+        	    });
+        		mPlayer.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
+        	        public void onCompletion(MediaPlayer mp) {
+        	        	playIntro(false);
+        	        }
+        		});
+        	}
+    	}
+    	else {
+    		if (mPlayer != null) {
+                prefs.edit().putBoolean("firstRun", false).commit();
+    			if (mPlayer.isPlaying()) {
+    				mPlayer.stop();
+    			}
+    			mPlayer.release();
+    			mPlayer = null;
+				if (mainFragment != null) {
+					if (mainFragment.ib.isChecked()) {
+    					mainFragment.ib.post(new Runnable() {
+    						@Override
+    						public void run() {
+    							mainFragment.ib.setChecked(false);
+    							//Log.v("TB", "setChecked");
+    						}
+    					});
+					}
+				}
+    		}
+    	}
+    }
+
+    //public void onAbout(MenuItem item) {
 		//showAboutDialog();
 	//}
 
@@ -1334,6 +1508,7 @@ public class MainActivity extends SherlockFragmentActivity
 			gpsService.stopAllNodes();
 		}
 		NodeManager.reset();
+        prefs.edit().clear().commit();
 	}
 
 	public void onDebug(MenuItem item) {

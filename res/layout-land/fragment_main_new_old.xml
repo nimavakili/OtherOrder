@@ -1,0 +1,300 @@
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/main"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:ignore="ContentDescription" >
+
+	<LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="horizontal" >
+
+	<RelativeLayout
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:layout_weight="0.50" >
+
+	<RelativeLayout
+        android:id="@+id/main_bg"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent" >
+	<ImageView
+        android:layout_width="wrap_content"
+        android:layout_height="match_parent"
+        android:layout_centerInParent="true"
+        android:layout_marginBottom="10dp"
+        android:layout_marginLeft="10dp"
+        android:layout_marginRight="10dp"
+        android:layout_marginTop="10dp"
+        android:adjustViewBounds="true"
+        android:scaleType="fitCenter"
+        android:src="@drawable/main_bg_vector" />
+
+		<TextView
+		    android:id="@+id/center_title"
+		    android:layout_width="wrap_content"
+		    android:layout_height="wrap_content"
+		    android:layout_centerInParent="true"
+		    android:text="@string/app_name"
+		    android:visibility="invisible"
+		    android:textAppearance="@android:style/TextAppearance.Large" />
+
+	    <ToggleButton
+	        android:id="@+id/trackingButton"
+	        android:layout_width="wrap_content"
+	        android:layout_height="wrap_content"
+	        android:layout_centerInParent="true"
+	        android:background="@drawable/btn_toggle_nb"
+	        android:minHeight="56dp"
+	        android:minWidth="128dp"
+	        android:onClick="onTrackingToggled"
+	        android:text="@string/start_tracking"
+	        android:textOff="@string/start_tracking"
+	        android:textOn="@string/stop_tracking"
+	        android:textSize="@dimen/btn_size_medium" />
+
+		</RelativeLayout>
+
+		<RelativeLayout
+		    android:id="@+id/stats"
+		    android:layout_width="match_parent"
+		    android:layout_height="match_parent"
+		    android:visibility="gone" >
+
+		    <LinearLayout
+		        android:layout_width="match_parent"
+		        android:layout_height="wrap_content"
+		        android:layout_centerInParent="true"
+		        android:orientation="horizontal" >
+
+		        <LinearLayout
+		            android:layout_width="0dp"
+		            android:layout_height="wrap_content"
+		            android:layout_weight=".5"
+		            android:orientation="vertical" >
+
+		            <TextView
+		                android:layout_width="match_parent"
+		                android:layout_height="wrap_content"
+		                android:gravity="right"
+		                android:padding="10dp"
+		                android:text="Latitude"
+		                android:textAppearance="@android:style/TextAppearance.Medium"
+		                android:textSize="@dimen/label_size" />
+
+		            <TextView
+		                android:layout_width="match_parent"
+		                android:layout_height="wrap_content"
+		                android:gravity="right"
+		                android:padding="10dp"
+		                android:text="Longitude"
+		                android:textAppearance="@android:style/TextAppearance.Medium"
+		                android:textSize="@dimen/label_size" />
+
+		            <TextView
+		                android:layout_width="match_parent"
+		                android:layout_height="wrap_content"
+		                android:gravity="right"
+		                android:padding="10dp"
+		                android:text="Accuracy"
+		                android:textAppearance="@android:style/TextAppearance.Medium"
+		                android:textSize="@dimen/label_size" />
+
+		            <TextView
+		                android:layout_width="match_parent"
+		                android:layout_height="wrap_content"
+		                android:gravity="right"
+		                android:padding="10dp"
+		                android:text="All Regions"
+		                android:textAppearance="@android:style/TextAppearance.Medium"
+		                android:textSize="@dimen/label_size" />
+
+		            <TextView
+		                android:layout_width="match_parent"
+		                android:layout_height="wrap_content"
+		                android:gravity="right"
+		                android:padding="10dp"
+		                android:text="Active Regions"
+		                android:textAppearance="@android:style/TextAppearance.Medium"
+		                android:textSize="@dimen/label_size" />
+		        </LinearLayout>
+
+		        <View
+		            android:layout_width="2dp"
+		            android:layout_height="match_parent"
+		            android:background="@color/holo_blue_bright" />
+
+		        <LinearLayout
+		            android:layout_width="0dp"
+		            android:layout_height="wrap_content"
+		            android:layout_weight=".5"
+		            android:orientation="vertical" >
+
+		            <TextView
+		                android:id="@+id/latitude"
+		                android:layout_width="match_parent"
+		                android:layout_height="wrap_content"
+		                android:padding="10dp"
+		                android:text="---"
+		                android:textAppearance="@android:style/TextAppearance.Medium"
+		                android:textSize="@dimen/label_size" />
+
+		            <TextView
+		                android:id="@+id/longitude"
+		                android:layout_width="match_parent"
+		                android:layout_height="wrap_content"
+		                android:padding="10dp"
+		                android:text="---"
+		                android:textAppearance="@android:style/TextAppearance.Medium"
+		                android:textSize="@dimen/label_size" />
+
+		            <TextView
+		                android:id="@+id/accuracy"
+		                android:layout_width="match_parent"
+		                android:layout_height="wrap_content"
+		                android:padding="10dp"
+		                android:text="---"
+		                android:textAppearance="@android:style/TextAppearance.Medium"
+		                android:textSize="@dimen/label_size" />
+
+		            <TextView
+		                android:id="@+id/all"
+		                android:layout_width="match_parent"
+		                android:layout_height="wrap_content"
+		                android:padding="10dp"
+		                android:text="---"
+		                android:textAppearance="@android:style/TextAppearance.Medium"
+		                android:textSize="@dimen/label_size" />
+
+		            <TextView
+		                android:id="@+id/active"
+		                android:layout_width="match_parent"
+		                android:layout_height="wrap_content"
+		                android:padding="10dp"
+		                android:text="---"
+		                android:textAppearance="@android:style/TextAppearance.Medium"
+		                android:textSize="@dimen/label_size" />
+		        </LinearLayout>
+		    </LinearLayout>
+		</RelativeLayout>
+
+		</RelativeLayout>
+    		
+    <!--TextView
+        android:id="@+id/app_name"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentTop="true"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="30dp"
+        android:text="@string/app_name"
+        android:textAppearance="@android:style/TextAppearance.Large"
+        android:textColor="@color/black"
+        android:textSize="@dimen/title_size" /-->
+
+	<LinearLayout
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:layout_weight=".50"
+        android:orientation="vertical" >
+	    
+	<RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight=".50"
+        android:layout_alignParentRight="true"
+        android:layout_toRightOf="@id/main_bg"
+        android:gravity="center_vertical" >
+
+		<TextView
+		    android:id="@+id/searching"
+		    android:layout_width="wrap_content"
+		    android:layout_height="wrap_content"
+		    android:layout_centerHorizontal="true"
+		    android:background="@android:drawable/toast_frame"
+		    android:gravity="center"
+		    android:shadowColor="#BB000000"
+		    android:shadowRadius="2.75"
+		    android:text="@string/searching"
+		    android:visibility="invisible"
+		    android:textAppearance="@android:style/TextAppearance.Small"
+		    android:textColor="@color/white" />
+	    
+    </RelativeLayout>
+    
+	<RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight=".50"
+        android:layout_alignParentRight="true"
+        android:layout_toRightOf="@id/main_bg"
+        android:gravity="center_vertical" >
+	
+	    <ToggleButton
+	        android:id="@+id/introButton"
+	        android:layout_width="wrap_content"
+	        android:layout_height="wrap_content"
+	        android:layout_centerHorizontal="true"
+	        android:background="@drawable/btn_toggle"
+	        android:gravity="center_vertical|center_horizontal"
+	        android:minHeight="56dp"
+	        android:minWidth="128dp"
+	        android:onClick="onIntroToggled"
+	        android:text="@string/start_intro"
+	        android:textOff="@string/start_intro"
+	        android:textOn="@string/stop_intro"
+	        android:textSize="@dimen/btn_size" />
+		    
+    </RelativeLayout>
+</LinearLayout>
+</LinearLayout>
+
+	<!-- RelativeLayout
+	    android:id="@+id/helpFrame"
+	    android:layout_width="match_parent"
+	    android:layout_height="match_parent"
+	    android:background="@color/white"
+	    android:visibility="invisible" >
+	    
+	    <ScrollView
+	        android:id="@+id/SCROLLER_ID2"
+	        android:layout_width="match_parent"
+	        android:layout_height="wrap_content"
+	        android:layout_alignParentBottom="true"
+	        android:layout_alignParentTop="true"
+	        android:layout_marginBottom="84dp"
+	        android:layout_marginTop="60dp"
+	        android:fillViewport="true"
+	        android:paddingLeft="30dp"
+	        android:paddingRight="30dp"
+	        android:scrollbarAlwaysDrawVerticalTrack="true"
+			android:fadeScrollbars="false"
+	        android:scrollbarStyle="outsideOverlay"
+	        android:scrollbars="vertical" >
+	        
+	        <TextView
+	            android:id="@+id/help"
+	            android:layout_width="fill_parent"
+	            android:layout_height="wrap_content"
+	            android:text="@string/help"
+	            android:textAppearance="?android:attr/textAppearanceMedium"
+	            android:textSize="@dimen/label_size" />
+	
+		</ScrollView>
+        
+	    <TextView
+	        android:id="@+id/helpTitle"
+	        android:layout_width="wrap_content"
+	        android:layout_height="wrap_content"
+	        android:layout_alignParentTop="true"
+	        android:layout_alignParentLeft="true"
+	        android:layout_marginLeft="30dp"
+	        android:layout_marginTop="20dp"
+	        android:text="@string/menu_help"
+	        android:textAppearance="?android:attr/textAppearanceMedium"
+	        android:textSize="@dimen/title_size" />
+
+	</RelativeLayout-->
+
+</RelativeLayout>

@@ -12,13 +12,13 @@
         android:layout_centerInParent="true" >
         
         <ImageView
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginLeft="10dp"
-        android:layout_marginRight="10dp"
-        android:adjustViewBounds="true"
-        android:scaleType="fitCenter"
-        android:src="@drawable/main_bg" />
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="10dp"
+            android:layout_marginRight="10dp"
+            android:adjustViewBounds="true"
+            android:scaleType="fitCenter"
+            android:src="@drawable/main_bg_vector" />
 
 		<TextView
 		    android:id="@+id/center_title"
@@ -35,7 +35,7 @@
 	        android:layout_height="wrap_content"
 	        android:layout_centerInParent="true"
 	        android:background="@drawable/btn_toggle_nb"
-	        android:minHeight="56dp"
+	        android:minHeight="96dp"
 	        android:minWidth="128dp"
 	        android:onClick="onTrackingToggled"
 	        android:text="@string/start_tracking"
@@ -57,7 +57,7 @@
         android:textColor="@color/black"
         android:textSize="@dimen/title_size" /-->
 
-    <RelativeLayout
+    <!--RelativeLayout
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_below="@id/main_bg"
@@ -78,9 +78,9 @@
         android:text="@string/start_intro"
         android:textOff="@string/start_intro"
         android:textOn="@string/stop_intro"
-        android:textSize="@dimen/btn_size" />
+        android:textSize="@dimen/btn_size" >
 
-    </RelativeLayout>
+    </RelativeLayout/-->
     	
 	<!-- RelativeLayout
 	    android:id="@+id/helpFrame"
@@ -254,6 +254,22 @@
         android:layout_centerHorizontal="true"
         android:gravity="center_vertical" >
 
+        <ToggleButton
+	        android:id="@+id/introButton"
+	        android:layout_width="wrap_content"
+	        android:layout_height="wrap_content"
+	        android:layout_centerHorizontal="true"
+	        android:background="@drawable/btn_toggle"
+	        android:gravity="center_vertical|center_horizontal"
+	        android:minHeight="56dp"
+	        android:minWidth="128dp"
+	        android:onClick="onIntroToggled"
+	        android:text="@string/start_intro"
+	        android:textOff="@string/start_intro"
+	        android:textOn="@string/stop_intro"
+	        android:checked="true"
+	        android:textSize="@dimen/btn_size" />
+        
 		<TextView
 		    android:id="@+id/searching"
 		    android:layout_width="wrap_content"
@@ -264,6 +280,7 @@
 		    android:shadowColor="#BB000000"
 		    android:shadowRadius="2.75"
 		    android:text="@string/searching"
+		    android:visibility="invisible"
 		    android:textAppearance="@android:style/TextAppearance.Small"
 		    android:textColor="@color/white" />
 	</RelativeLayout>

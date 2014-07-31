@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+	<item>
+    <shape
+	    android:shape="ring"
+	    android:thickness="40dp"
+	    android:useLevel="false"
+	    android:innerRadius="200dp" >
+	    <solid android:color="#069124" />
+	    <size android:width="480dp" android:height="480dp" />
+	</shape>
+	</item>
+	<item>
+    <shape
+	    android:shape="ring"
+	    android:thickness="40dp"
+	    android:useLevel="false"
+	    android:innerRadius="164dp" >
+	    <solid android:color="#0904db" />
+	    <size android:width="480dp" android:height="480dp" />
+	</shape>
+	</item>
+	<item>
+    <shape
+	    android:shape="ring"
+	    android:thickness="36dp"
+	    android:useLevel="false"
+	    android:innerRadius="128dp" >
+	    <solid android:color="#f36405" />
+	    <size android:width="480dp" android:height="480dp" />
+	</shape>
+	</item>
+</layer-list>

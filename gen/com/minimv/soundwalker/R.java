@@ -8,6 +8,9 @@
 package com.minimv.soundwalker;
 
 public final class R {
+    public static final class array {
+        public static final int plants=0x7f0c0000;
+    }
     public static final class attr {
         /**  Custom divider drawable to use for elements in the action bar. 
          <p>Must be a reference to another resource, in the form "<code>@[+][<i>package</i>:]<i>type</i>:<i>name</i></code>"
@@ -1137,7 +1140,10 @@ containing a value of this type.
         public static final int ic_plusone_tall_off_client=0x7f0200a5;
         public static final int location_marker=0x7f0200a6;
         public static final int main_bg=0x7f0200a7;
-        public static final int map_marker=0x7f0200a8;
+        public static final int main_bg_vector=0x7f0200a8;
+        public static final int map_marker=0x7f0200a9;
+        public static final int new_blue_dot=0x7f0200aa;
+        public static final int new_blue_dot_halo=0x7f0200ab;
     }
     public static final class id {
         public static final int SCROLLER_ID1=0x7f050048;
@@ -1192,37 +1198,38 @@ containing a value of this type.
         public static final int all_text=0x7f050041;
         public static final int app_name=0x7f050039;
         public static final int backButton=0x7f05004c;
-        public static final int center_title=0x7f050054;
+        public static final int center_title=0x7f050055;
         public static final int container=0x7f05004f;
-        public static final int demo_collection_button=0x7f05005c;
-        public static final int demo_external_activity=0x7f05005d;
+        public static final int demo_collection_button=0x7f05005d;
+        public static final int demo_external_activity=0x7f05005e;
         public static final int disableHome=0x7f050009;
         public static final int edit_query=0x7f05002a;
-        public static final int gpsContainer=0x7f050058;
+        public static final int gpsContainer=0x7f050059;
         public static final int homeAsUp=0x7f050006;
         public static final int hybrid=0x7f050013;
-        public static final int introButton=0x7f050055;
+        public static final int introButton=0x7f050058;
         public static final int latitude=0x7f050057;
         public static final int lattitude=0x7f05003c;
         public static final int lattitude_text=0x7f05003b;
-        public static final int leftCol=0x7f050051;
+        public static final int leftCol=0x7f050052;
         public static final int listMode=0x7f050002;
         public static final int longitude=0x7f05003e;
         public static final int longitude_text=0x7f05003d;
-        public static final int main=0x7f050052;
-        public static final int main_bg=0x7f050053;
-        public static final int map=0x7f05005a;
-        public static final int mapD=0x7f05005b;
+        public static final int main=0x7f050053;
+        public static final int main_bg=0x7f050054;
+        public static final int map=0x7f05005b;
+        public static final int mapD=0x7f05005c;
         public static final int mapStatus=0x7f05004e;
-        public static final int menu_debug=0x7f05005e;
-        public static final int menu_reset=0x7f05005f;
-        public static final int menu_version=0x7f050060;
+        public static final int menu_debug=0x7f05005f;
+        public static final int menu_reset=0x7f050060;
+        public static final int menu_version=0x7f050061;
         public static final int none=0x7f050010;
         public static final int normal=0x7f050001;
         public static final int pager=0x7f050036;
         public static final int pager_title_strip=0x7f050037;
         public static final int parent=0x7f050038;
-        public static final int regionContainer=0x7f050059;
+        public static final int plantsList=0x7f050051;
+        public static final int regionContainer=0x7f05005a;
         public static final int satellite=0x7f050011;
         public static final int searching=0x7f05003a;
         public static final int showCustom=0x7f050008;
@@ -1270,18 +1277,20 @@ containing a value of this type.
         public static final int activity_main_t=0x7f030018;
         public static final int fragment_about=0x7f030019;
         public static final int fragment_collection_object=0x7f03001a;
-        public static final int fragment_main=0x7f03001b;
-        public static final int fragment_main_new=0x7f03001c;
-        public static final int fragment_main_t=0x7f03001d;
-        public static final int fragment_map=0x7f03001e;
-        public static final int fragment_map_d=0x7f03001f;
-        public static final int fragment_section_dummy=0x7f030020;
-        public static final int fragment_section_launchpad=0x7f030021;
-        public static final int sherlock_spinner_dropdown_item=0x7f030022;
-        public static final int sherlock_spinner_item=0x7f030023;
+        public static final int fragment_index=0x7f03001b;
+        public static final int fragment_main=0x7f03001c;
+        public static final int fragment_main_new=0x7f03001d;
+        public static final int fragment_main_new_old=0x7f03001e;
+        public static final int fragment_main_t=0x7f03001f;
+        public static final int fragment_map=0x7f030020;
+        public static final int fragment_map_d=0x7f030021;
+        public static final int fragment_section_dummy=0x7f030022;
+        public static final int fragment_section_launchpad=0x7f030023;
+        public static final int sherlock_spinner_dropdown_item=0x7f030024;
+        public static final int sherlock_spinner_item=0x7f030025;
     }
     public static final class menu {
-        public static final int activity_menu=0x7f0c0000;
+        public static final int activity_menu=0x7f0d0000;
     }
     public static final class raw {
         public static final int intro=0x7f040000;

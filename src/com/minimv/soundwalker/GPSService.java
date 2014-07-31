@@ -21,6 +21,7 @@ import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
 import android.media.AudioManager;
+import android.media.MediaPlayer;
 import android.os.Binder;
 import android.os.Bundle;
 import android.os.Environment;
@@ -75,6 +76,7 @@ public class GPSService extends Service implements LocationListener {
 	//final static public String messageLon = "com.minimv.soundwalker.GPSService.Lon";
 	public final static String messageAct = "com.minimv.soundwalker.GPSService.Act";
 	public final static String messageAll = "com.minimv.soundwalker.GPSService.All";
+	public final static String messageIntro = "com.minimv.soundwalker.GPSService.Intro";
     private AudioManager audioManager;
     private AudioManager.OnAudioFocusChangeListener onAudioFocusChange;
     public int nodeCount = 0;
@@ -86,6 +88,8 @@ public class GPSService extends Service implements LocationListener {
     private double[] lons = {0, 0, 0, 0, 0, 0};
     private double[] accs = {-1, -1, -1, -1, -1, -1};
     private int curIndex = 0;
+	private MediaPlayer mPlayer;
+	//private boolean introPlaying = true;
     //private double preLat = 0, preLon = 0, preAcc = -1;
     
 	@Override
@@ -171,6 +175,7 @@ public class GPSService extends Service implements LocationListener {
 				else if (focusChange == AudioManager.AUDIOFOCUS_LOSS) {
 					hasAudioFocus = false;
 					stopAllNodes();
+					playIntro(false);
 				}
 				//else if (focusChange == AudioManager.AUDIOFOCUS_LOSS_TRANSIENT || focusChange == AudioManager.AUDIOFOCUS_LOSS_TRANSIENT_CAN_DUCK) {
 					// TODO lowering volume
@@ -183,6 +188,12 @@ public class GPSService extends Service implements LocationListener {
 		}*/
 		
 		//loadMp3();
+		NodeManager.mContext = this;
+		NodeManager.lastPositions = getSharedPreferences("LAST_POSITIONS", 0);
+		NodeManager.positionEditor = NodeManager.lastPositions.edit();
+		NodeManager.reset();
+
+		//playIntro(true);
 	}
 
 	@Override
@@ -333,9 +344,9 @@ public class GPSService extends Service implements LocationListener {
 		//Log.v("FILES", "Audio files count: " + audioFiles.length);
 		int fileCount = allFiles.length;
 		node = new NodeManager[fileCount];
-		NodeManager.mContext = this;
-		NodeManager.lastPositions = getSharedPreferences("LAST_POSITIONS", 0);
-		NodeManager.positionEditor = NodeManager.lastPositions.edit();
+		//NodeManager.mContext = this;
+		//NodeManager.lastPositions = getSharedPreferences("LAST_POSITIONS", 0);
+		//NodeManager.positionEditor = NodeManager.lastPositions.edit();
 		nodeCount = 0;
 		int error = 0;
 		for (int i = 0; i < fileCount; i++) {
@@ -572,6 +583,12 @@ public class GPSService extends Service implements LocationListener {
 		return isTracking;
 	}
 
+	public boolean isIntroPlaying() {
+		if (mPlayer != null)
+			return mPlayer.isPlaying();
+		return false;
+	}
+
 	public boolean gotLock() {
 		return gotLock;
 	}
@@ -718,6 +735,7 @@ public class GPSService extends Service implements LocationListener {
 	@Override
 	public void onDestroy() {
 		Log.v(TAG, "OnDestroy");
+		playIntro(false);
 		//stopForeground(true);
 		//locationManager.removeUpdates(this);
 	}
@@ -758,4 +776,53 @@ public class GPSService extends Service implements LocationListener {
 			}
 		}
 	}
+
+    public void playIntro(boolean play) {
+		// TODO VolumePrompt
+    	//AudioManager audio = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
+    	//int currentVolume = audio.getStreamVolume(AudioManager.STREAM_MUSIC);
+    	if (play) {
+        	if (mPlayer == null) {
+        		mPlayer = MediaPlayer.create(this, R.raw.intro);
+        		mPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
+        		mPlayer.setOnPreparedListener(new MediaPlayer.OnPreparedListener() {
+        	        public void onPrepared(MediaPlayer mp) {
+        				int result = audioManager.requestAudioFocus(onAudioFocusChange, AudioManager.STREAM_MUSIC, AudioManager.AUDIOFOCUS_GAIN);
+        				if (result == AudioManager.AUDIOFOCUS_REQUEST_GRANTED) {
+        					hasAudioFocus = true;
+            	        	mPlayer.start();
+            	        	//introPlaying = true;
+            	    		sendMessage(messageIntro, "Yes");
+        				}
+        				else if (result == AudioManager.AUDIOFOCUS_REQUEST_FAILED) {
+        					hasAudioFocus = false;
+        				}
+        	        }
+        	    });
+        		mPlayer.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
+        	        public void onCompletion(MediaPlayer mp) {
+        				audioManager.abandonAudioFocus(onAudioFocusChange);
+    					hasAudioFocus = false;
+        	    		sendMessage(messageIntro, "No");
+        	    		mPlayer.release();
+        	    		mPlayer = null;
+        	        }
+        		});
+        	}
+    	}
+    	else {
+    		if (mPlayer != null) {
+                //prefs.edit().putBoolean("firstRun", false).commit();
+    			if (mPlayer.isPlaying()) {
+    				mPlayer.stop();
+    				audioManager.abandonAudioFocus(onAudioFocusChange);
+					hasAudioFocus = false;
+    	    		sendMessage(messageIntro, "No");
+    			}
+    			mPlayer.release();
+    			mPlayer = null;
+	        	//introPlaying = false;
+    		}
+    	}
+    }
 }

@@ -9,8 +9,8 @@
     <string name="menu_help">Aide</string>
     <string name="stop_recording">Arrêter l\'enregistrement</string>
     <string name="start_recording">Planter une graine</string>
-    <string name="start_tracking"><b>Start Soundwalk</b></string>
-    <string name="stop_tracking"><b>Stop Soundwalk</b></string>
+    <string name="start_tracking"><b>Start\nSound Walk</b></string>
+    <string name="stop_tracking"><b>Stop\nSound Walk</b></string>
     <string name="start_intro">Play Intro</string>
     <string name="stop_intro">Stop Intro</string>
     <string name="upload_button">Upload Files</string>
@@ -24,10 +24,10 @@
     <string name="play_button">Écouter</string>
     <string name="stop_button">Arrêter</string>
     <string name="go_text"><b>How treelike we are,\nHow human the tree</b>\n\nGretel Ehrlich, \"River History\", 1998</string>
-    <string name="version">v2.5b</string>
-    <string name="outide_map">You must be in Bussey Brook Meadow to use this app.</string>
-    <string name="went_outide">You stepped outside of Bussey Brook Meadow while GPS tracking was on. GPS tracking might drain your battery. Do you wish to stop GPS tracking?</string>
-    <string name="came_inside">You are at Bussey Brook Meadow now. Do you wish to start the soundwalk?</string>
+    <string name="version">v2.8b</string>
+    <string name="outide_map">You must be in Bussey Brook\nMeadow to use this app.</string>
+    <string name="went_outide">You exited Bussey Brook Meadow while GPS tracking was on. GPS tracking might drain your battery. Do you wish to stop GPS tracking?</string>
+    <string name="came_inside">You are at Bussey Brook Meadow now. Do you wish to start the sound walk?</string>
     <string name="searching">Acquiring GPS Lock...</string>
     <string name="gps_disabled">GPS Receiver Disabled</string>
     <!-- string name="test">http://minim-v.com/grimpant/A000002A64C317/40.50689578,-74.47057746,20130615163348.mp3</string -->
@@ -67,10 +67,42 @@
 	<string name="invalid_format">\nCorrect: latitude,longitude,radius1,radius2.mp3\n\n\t\tlatitude and longitude in degrees\n\t\tradius1: active radius in meters\n\t\tradius2: fade-in radius in meters\n\nExample: 42.90895,-78.87955,48,24.mp3</string>    	
 		
     
-    <string name="about"><b>Other Order (2014)\nTeri Rueb and Peter Del Tredici</b>\n\n"Other Order" is a sound walk set in the spontaneous landscape of Bussey Brook Meadow.  Where the formal gardens of the Arboretum present visitors with carefully arranged and maintained specimens organized according to scientific systems of botanical classification, Bussey Brook Meadow is a less easily categorized “emergent” ecology – an urban wild that has evolved through informal processes of management that have left it open to colonization by spontaneous vegetation and the ever-shifting impacts of human interventions.\n\nThe sound walk presents a blend of recorded interviews and sounds drawnfrom and inspired by the landscape itself.  Resilience is the hallmark of such emergent ecologies, as illuminated by the voice of the Arnold Arboretum’s retired Senior Research Scientist, Peter Del Tredici, as he accompanies a variety of guest visitors on walks through the meadow.\n\nThe tracts that make up the contemporary Bussey Brook Meadow parcel have been owned and governed by disparate parties since the 1600s, including private farmers and residents, Harvard University, the Bussey Institute and the City of Boston.  Designated as an “urban wild” in the 1970s, and later brought together as a unified parcel, the site was incorporated into the Arnold Arboretum indenture in 1996 and was made passable with the opening of the Blackwell Footpath in 2001, named after John Blackwell, an urban planner who dedicated over 30 years to the preservation of urban wilds throughout Boston.\n\nBussey Brook Meadow is now managed as a living laboratory for urban ecology.  It is a site where human interventions including agriculture, landfills, sewer and transportation corridors interact with biological processes and together they are allowed to run their "natural" course. Despite a long history of abuse and neglect, the site has evolved to its current state as a functional urban wetland.  The careful observer will be rewarded with discoveries both delightful and disturbing in this “Arboretum gone wild”.\n\nThe sound walk is a GPS-enhanced software application that senses the participant’s movement and location in the landscape and in response, plays back sounds at specific points through the landscape.  Visitors are encouraged to download the app in advance of their visit and wear headphones for optimal listening.  Be mindful of bicyclists and other pedestrians on the trail if you wear studio or noise canceling headphones.\n\nFurther information about the project may be found at:\nwww.terirueb.net/other_order\n\nCredits:\n\t\tCreated by Teri Rueb and Peter Del Tredici\nAdditional Sound Design:\n\t\tAdam McFillin\nMobile App Development:\n\t\tTom Stoll (iOS)\n\t\tNima Vakili (Android)\nIllustration:\n\t\tAlison Paul\n\nOther Order was commissioned by the Arnold Arboretum and funded with an Artist Residency at the Harvard metaLab.</string>
+    <string name="about"><b>Other Order (2014)\nTeri Rueb and Peter Del Tredici</b>\n\n“Other Order” is a sound walk set in the Bussey Brook Meadow of the Arnold Arboretum. Where the formal gardens of the Arboretum present visitors with carefully arranged and maintained specimens organized according to scientific systems of botanical classification, Bussey Brook Meadow is a less easily categorized “emergent” ecology – an urban wild that has evolved through informal processes of management that have left it open to colonization by spontaneous vegetation and the ever-shifting impacts of human interventions. While both landscapes are the product of human design and intervention, Bussey Brook Meadow emerges as a sort of alter ego to the Arboretum proper – ­an Arboretum gone wild.\n\nThe sound walk presents a blend of recorded conversations and sounds drawn from and inspired by the landscape itself. As visitors walk with mobile app in hand, their position is sensed by GPS and triggers playback of sounds at particular locations. The voice of the Arnold Arboretum’s beloved Senior Research Scientist, Peter Del Tredici, and guests who visit the meadow with him illuminate the biological, social and cultural significance of the meadow as an urban wild.\n\nDesignated as an “urban wild” in the 1970s, and later brought together as a unified parcel, the site was incorporated into the Arnold Arboretum indenture in 1996 and was made passable with the opening of the Blackwell Footpath in 2001, named after John Blackwell, an urban planner who dedicated over 30 years to the preservation of urban wilds throughout Boston.\n\nBussey Brook Meadow is now managed as a living laboratory for urban ecology. It is a site where human interventions including agriculture, landfills, sewer and transportation corridors interact with social, cultural and biological processes that collectively are allowed to run their “natural” course. Despite a long history of abuse and neglect, the site has evolved to its current state as a functional wetland, as well as a refuge for commuters, dog walkers, families, nature enthusiasts, and transient populations of all kinds, from birds to humans.\n\nVisitors are encouraged to download the app in advance of their visit and wear headphones for optimal listening. Be mindful of bicyclists and other pedestrians on the trail who you may not hear approaching when wearing headphones.\n\nFurther Information:\n\twww.terirueb.net/other_order\n\nCredits:\n\t\tCreated by Teri Rueb and Peter Del Tredici\nAdditional Sound Recording:\n\t\tErnst Karel\nAdditional Sound Design:\n\t\tAdam McFillin and Anya Yermakova\nMobile App Software:\n\t\tNima Vakili (Android)\n\t\tTom Stoll, Kitefish Labs (iOS)\nIllustration:\n\t\tAlison Paul\n\nOther Order was commissioned by the Arnold Arboretum / Harvard University and generously funded with an Artist Residency at the Harvard metaLab.</string>
     <string name="help"><b>Enregistrez vos déplacements</b> pour partager vos parcours et contribuer au projet Grimpant :\n\nAppuyez sur le bouton «Commencer le parcours» pour débuter l\'enregistrement de vos déplacements à travers la ville.\n\n\n<b>Plantez une graine</b> pour faire entendre votre voix dans le projet Grimpant :\n\nPendant votre parcours, lorsque vous découvrez une plante ou un arbre qui vous semble remarquable, appuyez sur le bouton «Planter une graine» pour enregistrer votre commentaire audio sur la plante, l\'arbre ou la vigne de votre choix (une minute maximum).\n\nAppuyez sur le bouton «Écouter» pour réécouter votre enregistrement avant de l\'envoyer. Grimpant vous propose ensuite d\'envoyer votre enregistrement.\n\n\n<b>Écouter une graine</b> :\n\nVous pouvez écouter les enregistrements des autres personnes en sélectionnant une graine sur la carte.</string>
     
     <string name="dummy_section_text">Section %1d is just a dummy section.</string>
     <string name="demo_external_activity">Demo External Activity</string>
     <string name="demo_collection">Demo Collection</string>
+    <string-array name="plants">
+		<item>Ailanthus</item>
+		<item>Amur Cork Tree</item>
+		<item>Bittersweet</item>
+		<item>Black Walnut</item>
+		<item>Castor Aurelia</item>
+		<item>Catalpa</item>
+		<item>Cherry</item>
+		<item>Chickoree</item>
+		<item>Crab Apple</item>
+		<item>Cyriacus</item>
+		<item>Fragmites</item>
+		<item>Fraxenis Chinensis</item>
+		<item>Grape Vine</item>
+		<item>Hackberry</item>
+		<item>Hickory</item>
+		<item>Japanese Knotweed</item>
+		<item>Mugwort</item>
+		<item>Milkweed</item>
+		<item>Polonia / Princess Tree</item>
+		<item>Poplar</item>
+		<item>Raspberry</item>
+		<item>Red Maple</item>
+		<item>Reed Canary Grass</item>
+		<item>South Carolina Silver Bell</item>
+		<item>Staghorn Sumac</item>
+		<item>Swamp Dewberry</item>
+		<item>Thimbleberry</item>
+		<item>Ulnus Prothera</item>
+		<item>Willow</item>
+		<item>Yellow Flag Iris</item>
+    </string-array>
 </resources>

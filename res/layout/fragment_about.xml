@@ -5,8 +5,6 @@
 	        android:scrollbarAlwaysDrawVerticalTrack="true"
 			android:fadeScrollbars="false"
 	        android:scrollbarStyle="outsideOverlay"
-	        android:paddingLeft="10dp"
-	        android:paddingRight="10dp"
 	        android:scrollbars="vertical" >
 	        
 		    <TextView
@@ -15,8 +13,7 @@
 		        android:layout_height="wrap_content"
 		        android:autoLink="web"
 		        android:linksClickable="true"
-		        android:paddingBottom="10dp"
-		        android:paddingTop="10dp"
+		        android:padding="10dp"
 		        android:text="@string/about"
 		        android:textAppearance="?android:attr/textAppearanceMedium"
 		        android:textSize="@dimen/label_size_about" />

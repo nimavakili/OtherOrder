@@ -2,4 +2,10 @@
 <resources>
     <color name="holo_blue_bright">#33b5e5</color>
     <color name="holo_red_bright">#f44</color>
+    <color name="white">#FFFFFF</color>
+    <color name="black">#000000</color>
+    <color name="gray">#bfbfbf</color>
+    <color name="dark_gray">#b7b7b7</color>
+    <color name="light_gray">#e3e3e3</color>
+    <!-- color name="semi_white">#7FFFFFFF</color -->
 </resources>

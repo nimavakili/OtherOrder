@@ -1,8 +1,86 @@
-<ListView xmlns:android="http://schemas.android.com/apk/res/android"
-	android:id="@+id/plantsList"
-	android:layout_width="fill_parent"
-	android:layout_height="wrap_content"
-	android:scrollbarAlwaysDrawVerticalTrack="true"
-	android:fadeScrollbars="false"
-	android:scrollbarStyle="outsideOverlay"
-	android:entries="@array/plants" />
+<!-- ListView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/plantsList"
+    android:layout_width="fill_parent"
+    android:layout_height="wrap_content"
+    android:fadeScrollbars="false"
+    android:paddingLeft="10dp"
+    android:paddingRight="10dp"
+    android:scrollbarAlwaysDrawVerticalTrack="true"
+    android:clipChildren="false"
+    android:clipToPadding="false"
+    android:scrollbarStyle="outsideOverlay" /-->
+
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="fill_parent"
+    android:layout_height="wrap_content"
+    android:fadeScrollbars="false"
+    android:scrollbarAlwaysDrawVerticalTrack="true"
+    android:scrollbarStyle="outsideOverlay"
+	android:scrollbars="vertical" >
+    
+    <LinearLayout
+	    android:layout_width="fill_parent"
+	    android:layout_height="wrap_content"
+	    android:orientation="vertical" >
+	    
+        <TextView 
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:background="@color/holo_blue_bright"
+            android:textColor="@color/white"
+            android:padding="5dp"
+            android:text="PLANTS" />
+    
+	    <LinearLayout
+		    android:id="@+id/plantsList"
+		    android:layout_width="fill_parent"
+		    android:layout_height="wrap_content"
+		    android:orientation="vertical" />
+	    
+        <TextView 
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:background="@color/holo_blue_bright"
+            android:textColor="@color/white"
+            android:padding="5dp"
+            android:text="FEATURES | LANDMARKS" />
+    
+	    <LinearLayout
+		    android:id="@+id/landmarksList"
+		    android:layout_width="fill_parent"
+		    android:layout_height="wrap_content"
+		    android:orientation="vertical" />
+	    	    
+        <TextView 
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@color/holo_blue_bright"
+            android:textColor="@color/white"
+            android:padding="10dp"
+            android:visibility="gone"
+            android:text="@string/index" />
+        
+		<View
+		    android:layout_width="match_parent"
+		    android:layout_height="1dp"
+		    android:background="?android:attr/listDivider" />
+		        
+		<TextView
+			android:id="@+id/about"
+		    android:layout_width="match_parent"
+		    android:layout_height="wrap_content"
+		    android:paddingTop="10dp"
+		    android:paddingBottom="10dp"
+		    android:paddingLeft="15dp"
+		    android:paddingRight="15dp"
+		    android:text="@string/index"
+		    android:lineSpacingMultiplier="1.25"
+		    android:textAppearance="?android:attr/textAppearanceMedium"
+		    android:textSize="@dimen/label_size_about" />
+        
+	</LinearLayout>
+	
+</ScrollView>
+

@@ -25,7 +25,7 @@
 	    android:shape="ring"
 	    android:thickness="36dp"
 	    android:useLevel="false"
-	    android:innerRadius="128dp" >
+	    android:innerRadius="132dp" >
 	    <solid android:color="#f36405" />
 	    <size android:width="480dp" android:height="480dp" />
 	</shape>

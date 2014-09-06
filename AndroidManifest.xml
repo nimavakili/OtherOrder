@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.minimv.soundwalker"
+    package="com.minimv.soundwalker.otherorder"
     android:versionCode="1"
-    android:versionName="2.8b" >
+    android:versionName="3.1b" >
 
     <uses-sdk
-        android:minSdkVersion="14"
+        android:minSdkVersion="11"
         android:targetSdkVersion="19" />
 
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
@@ -26,13 +26,16 @@
 		
     <application
         android:allowBackup="true"
-        android:icon="@drawable/main_bg_vector"
+        android:icon="@drawable/ic_launcher"
         android:label="@string/app_name"
         android:theme="@style/AppTheme"
         android:process="com.minimv.soundwalker"
         android:hardwareAccelerated="true"
+        android:logo="@drawable/main_bg_vector"
         android:largeHeap="true" >
         
+		<uses-library android:required="true" android:name="com.google.android.maps" />
+		
 		<meta-data android:name="com.google.android.gms.version"
 		    android:value="@integer/google_play_services_version" />
 		<meta-data android:name="com.google.android.maps.v2.API_KEY"
@@ -44,7 +47,7 @@
 			android:configChanges="keyboardHidden|orientation|screenSize"-->
 		
 		<activity
-            android:name="com.minimv.soundwalker.MainActivity"
+            android:name="com.minimv.soundwalker.otherorder.MainActivity"
 			android:launchMode="singleInstance"
             android:label="@string/app_name" >
             <intent-filter>
@@ -52,9 +55,11 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-
+        
+        <activity android:name="com.minimv.soundwalker.otherorder.ImageSlider" android:label="@string/image_slider" />
+		
         <service
-            android:name="com.minimv.soundwalker.GPSService"
+            android:name="com.minimv.soundwalker.otherorder.GPSService"
             android:enabled="true" />
         
     </application>
